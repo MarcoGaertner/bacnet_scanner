@@ -3,104 +3,89 @@ import struct
 import time
 from datetime import datetime
 
-def get_network_interfaces():
-    """Ermittelt alle verfügbaren Netzwerkschnittstellen"""
-    interfaces = []
-    try:
-        # Hostname abrufen
-        hostname = socket.gethostname()
-        # Alle IP-Adressen des Hosts abrufen
-        ip_addresses = socket.getaddrinfo(hostname, None)
-        
-        # Localhost hinzufügen
-        interfaces.append(('127.0.0.1', 'Localhost'))
-        # Alle Interfaces hinzufügen
-        interfaces.append(('0.0.0.0', 'Alle Interfaces'))
-        
-        # Weitere IPs hinzufügen
-        for ip in ip_addresses:
-            if ip[0] == socket.AF_INET:  # Nur IPv4
-                addr = ip[4][0]
-                if not addr.startswith('127.'):  # Localhost ausschließen
-                    interfaces.append((addr, f'Interface {addr}'))
-        
-    except Exception as e:
-        print(f"Fehler beim Ermitteln der Netzwerkschnittstellen: {e}")
-    
-    return interfaces
-
 def create_who_is_message():
     """Erstellt eine BACnet Who-Is Nachricht"""
-    # [Code bleibt gleich wie vorher]
-    # ... [vorheriger Code für Who-Is Nachricht] ...
+    
+    # BVLC Header
+    bvlc_type = 0x81
+    bvlc_function = 0x0B   # Original-Broadcast-NPDU
+    bvlc_length = 0x0008   # Gesamtlänge der Nachricht
+    
+    # NPDU
+    npdu_version = 0x01
+    npdu_control = 0x00    # Geändert von 0x20 auf 0x00
+    
+    # APDU
+    apdu_type = 0x10       # Unconfirmed-REQ
+    service_choice = 0x08   # Who-Is
+    
+    message = struct.pack('>BBHBB',
+        bvlc_type,
+        bvlc_function,
+        bvlc_length,
+        npdu_version,
+        npdu_control
+    )
+    
+    message += struct.pack('BB',
+        apdu_type,
+        service_choice
+    )
+    
+    return message
 
-def scan_bacnet(local_ip='0.0.0.0'):
-    """BACnet-Scan mit spezifischer lokaler IP"""
-    # Socket erstellen
+def scan_bacnet():
+    """BACnet-Scan auf spezifischem Interface"""
+    local_ip = '10.48.172.120'  # Ihre spezifische IP-Adresse
+    bacnet_port = 0xBAC0        # 47808
+    
+    # Socket erstellen und konfigurieren
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     
     try:
-        # An spezifische lokale IP binden
-        sock.bind((local_ip, 0))
-        sock.settimeout(5)
+        # An die lokale IP und den BACnet-Port binden
+        sock.bind((local_ip, bacnet_port))
+        sock.settimeout(1)  # Timeout auf 1 Sekunde setzen
         
-        # Who-Is Nachricht erstellen und senden
+        # Who-Is Nachricht erstellen
         message = create_who_is_message()
-        broadcast_address = '255.255.255.255'
-        bacnet_port = 47808
         
-        print(f"[{datetime.now()}] Sende Who-Is Broadcast von {local_ip}...")
-        sock.sendto(message, (broadcast_address, bacnet_port))
+        print(f"[{datetime.now()}] Starting BACnet scan from {local_ip}")
+        print(f"Sending Who-Is message: {message.hex()}")
         
-        # Auf Antworten warten
-        devices = []
-        start_time = time.time()
-        
-        while time.time() - start_time < 5:
-            try:
-                data, addr = sock.recvfrom(1024)
-                print(f"\n[{datetime.now()}] Antwort von {addr[0]}:")
-                print(f"Rohdaten: {data.hex()}")
-                
-                if addr[0] not in devices:
-                    devices.append(addr[0])
-                
-            except socket.timeout:
-                continue
-        
-        print(f"\n[{datetime.now()}] Scan abgeschlossen!")
-        print(f"Gefundene Geräte: {len(devices)}")
-        for device in devices:
+        # Who-Is mehrmals senden (3 Versuche)
+        devices = set()
+        for attempt in range(3):
+            # Broadcast senden
+            sock.sendto(message, ('255.255.255.255', bacnet_port))
+            
+            # Auf Antworten warten
+            start_time = time.time()
+            while time.time() - start_time < 2:  # 2 Sekunden pro Versuch
+                try:
+                    data, addr = sock.recvfrom(1024)
+                    if addr[0] not in devices:
+                        print(f"\n[{datetime.now()}] Response from {addr[0]}:")
+                        print(f"Raw data: {data.hex()}")
+                        devices.add(addr[0])
+                except socket.timeout:
+                    continue
+            
+            print(f"\nAttempt {attempt + 1} completed")
+            
+        print(f"\n[{datetime.now()}] Scan completed!")
+        print(f"Found {len(devices)} devices:")
+        for device in sorted(devices):
             print(f"- {device}")
             
     except Exception as e:
-        print(f"Fehler: {e}")
+        print(f"Error: {e}")
+        print(f"Error details: {type(e).__name__}")
     
     finally:
         sock.close()
 
-def main():
-    # Verfügbare Interfaces anzeigen
-    interfaces = get_network_interfaces()
-    print("Verfügbare Netzwerkschnittstellen:")
-    for i, (ip, desc) in enumerate(interfaces):
-        print(f"{i+1}. {desc} ({ip})")
-    
-    # Benutzerauswahl
-    while True:
-        try:
-            choice = int(input("\nWählen Sie eine Schnittstelle (1-{}): ".format(len(interfaces))))
-            if 1 <= choice <= len(interfaces):
-                selected_ip = interfaces[choice-1][0]
-                break
-        except ValueError:
-            pass
-        print("Ungültige Auswahl. Bitte erneut versuchen.")
-    
-    # Scan mit gewählter IP durchführen
-    print(f"\nStarte Scan mit Interface: {selected_ip}")
-    scan_bacnet(selected_ip)
-
 if __name__ == "__main__":
-    main()
+    scan_bacnet()
