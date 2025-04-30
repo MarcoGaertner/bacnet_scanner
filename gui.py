@@ -9,6 +9,8 @@ import platform
 import ctypes
 from PIL import Image, ImageTk
 from config_manager import save_config, load_config
+from dark_combobox import DarkCombobox  
+from custom_menubar import CustomMenuBar
 
 class BACnetScannerGUI:
     def __init__(self, root):
@@ -16,14 +18,11 @@ class BACnetScannerGUI:
         self.root.title("BACnet Scanner")
 
         # 1. Grundlegende Konfiguration
-        # Lade gespeicherte Konfiguration
         self.config = load_config()
-        
-        # Initialisiere Datenspeicher
         self.devices = {}
         self.networks = {}
 
-        # Style-Konfiguration
+        # 2. Style-Konfiguration
         self.setup_styles()
 
         # 3. Fenster-Geometrie
@@ -33,13 +32,14 @@ class BACnetScannerGUI:
         self.setup_window_icon()
 
         # 5. Grid-Konfiguration
-        self.root.grid_rowconfigure(0, weight=1)
+        self.root.grid_rowconfigure(0, weight=0)  # Für die Menüleiste
+        self.root.grid_rowconfigure(1, weight=1)  # Für den Hauptinhalt
         self.root.grid_columnconfigure(0, weight=1)
 
-        # 6. GUI-Elemente erstellen
+        # 6. GUI-Elemente erstellen (vor dem Menü)
         self.create_gui_elements()
 
-        # 7. Menü erstellen
+        # 7. Menü erstellen (nach den GUI-Elementen)
         self.create_menu()
 
         # 8. Widget-Styling
@@ -103,37 +103,6 @@ class BACnetScannerGUI:
             foreground=[('active', self.colors['white'])]
         )
 
-        # Combobox Style
-        self.style.configure('TCombobox',
-            fieldbackground=self.colors['dark_element'],
-            background=self.colors['dark_element'],
-            foreground=self.colors['white'],
-            arrowcolor=self.colors['white']
-        )
-
-        # Wichtig: Die map-Konfiguration für den 'readonly' Zustand
-        self.style.map('TCombobox',
-            fieldbackground=[
-                ('readonly', self.colors['dark_element']),
-                ('disabled', self.colors['dark_element']),
-                ('active', self.colors['dark_element'])
-            ],
-            selectbackground=[
-                ('readonly', self.colors['dark_element'])
-            ],
-            foreground=[
-                ('readonly', self.colors['white'])
-            ]
-        )
-
-        # Spezifische Combobox-Einstellungen
-        self.root.option_add('*TCombobox*Listbox.background', self.colors['dark_element'])
-        self.root.option_add('*TCombobox*Listbox.foreground', self.colors['white'])
-        self.root.option_add('*TCombobox*Listbox.selectBackground', self.colors['petrol'])
-        self.root.option_add('*TCombobox*Listbox.selectForeground', self.colors['white'])
-        self.root.option_add('*TCombobox*field.background', self.colors['dark_element'])
-        self.root.option_add('*TCombobox*field.foreground', self.colors['white'])
-
         # LabelFrame Style
         self.style.configure('TLabelframe',
             background=self.colors['deep_blue'],
@@ -146,6 +115,21 @@ class BACnetScannerGUI:
 
         # Haupthintergrund setzen
         self.root.configure(bg=self.colors['deep_blue'])
+
+    def export_csv(self):
+        """Exportiert die Scan-Ergebnisse als CSV"""
+        if not self.networks:
+            messagebox.showwarning(
+                "Keine Daten",
+                "Es wurden noch keine Geräte gescannt. Bitte führen Sie zuerst einen Scan durch."
+            )
+            return
+        
+        success, message = export_to_csv(self.devices, self.networks)
+        if success:
+            messagebox.showinfo("Export erfolgreich", message)
+        else:
+            messagebox.showerror("Export fehlgeschlagen", message)
 
     def setup_window_geometry(self):
         """Konfiguriert die Fenster-Geometrie"""
@@ -183,14 +167,6 @@ class BACnetScannerGUI:
             selectforeground=self.colors['white']
         )
 
-        # Zusätzliche Combobox-Anpassungen
-        self.ip_combo.configure(
-            foreground=self.colors['white']
-        )
-        self.port_combo.configure(
-            foreground=self.colors['white']
-        )
-
     def setup_event_handlers(self):
         """Richtet alle Event-Handler ein"""
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
@@ -203,30 +179,6 @@ class BACnetScannerGUI:
         self.root.minsize(400, 300)
         self.fill_ip_list()
         self.fill_port_list()
-        
-    def customize_menu(self, menubar):
-        """Passt das Menü-Design an"""
-        menubar.configure(
-            bg=self.colors['deep_blue'],
-            fg=self.colors['white'],
-            activebackground=self.colors['petrol'],
-            activeforeground=self.colors['white']
-        )
-        
-        # Rekursive Funktion für Untermenüs
-        def customize_submenu(menu):
-            menu.configure(
-                bg=self.colors['deep_blue'],
-                fg=self.colors['white'],
-                activebackground=self.colors['petrol'],
-                activeforeground=self.colors['white'],
-                selectcolor=self.colors['light_petrol']
-            )
-            
-        # Auf alle Menüs anwenden
-        for menu in [menubar.children[child] for child in menubar.children]:
-            customize_submenu(menu)
-
 
     def setup_window_icon(self):
         """Konfiguriert das Fenster-Icon"""
@@ -262,17 +214,18 @@ class BACnetScannerGUI:
             print(f"Verfügbare IPs: {ip_list}")
             print(f"Letzte IP aus Konfig: {self.config.get('last_ip')}")
             
-            self.ip_combo['values'] = ip_list
+            # Aktualisiere die Werte in der Combobox
+            self.ip_combo.configure(values=ip_list)  # Hier die Änderung
             
             # Setze den letzten verwendeten Wert oder den ersten in der Liste
             last_ip = self.config.get('last_ip')
             if last_ip and last_ip in ip_list:
                 print(f"Versuche letzte IP zu setzen: {last_ip}")
-                self.ip_combo.set(last_ip)
+                self.ip_combo.set(last_ip)  # Hier die Änderung
             else:
                 print("Keine letzte IP gefunden oder nicht verfügbar, setze erste verfügbare IP")
                 if ip_list:
-                    self.ip_combo.set(ip_list[0])
+                    self.ip_combo.set(ip_list[0])  # Hier die Änderung
                     
             # Aktualisiere die GUI
             self.root.update()
@@ -284,7 +237,7 @@ class BACnetScannerGUI:
         """Erstellt alle GUI-Elemente"""
         # Hauptframe
         main_frame = ttk.Frame(self.root, padding="10")
-        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        main_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
         # Konfiguriere Main-Frame-Grid für Skalierung
         main_frame.grid_columnconfigure(1, weight=1)
@@ -297,30 +250,27 @@ class BACnetScannerGUI:
         
         # IP-Auswahl Label
         ttk.Label(input_frame, text="IP-Adresse:").grid(row=0, column=0, sticky=tk.W, pady=5, padx=(0, 10))
-            
-        # IP-Auswahl Combobox
-        self.ip_var = tk.StringVar()
-        self.ip_combo = ttk.Combobox(
-            input_frame, 
-            textvariable=self.ip_var,
-            style='Custom.TCombobox'
-        )
-        self.ip_combo.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=5) 
 
         # Port-Auswahl Label
         ttk.Label(input_frame, text="BACnet Port:").grid(row=1, column=0, sticky=tk.W, pady=5, padx=(0, 10))
         
+        # IP-Auswahl Combobox
+        self.ip_var = tk.StringVar()
+        self.ip_combo = DarkCombobox(
+            input_frame,
+            background=self.colors['dark_element'],
+            foreground=self.colors['white']
+        )
+        self.ip_combo.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=5)
+
         # Port-Auswahl Combobox
         self.port_var = tk.StringVar()
-        self.port_combo = ttk.Combobox(
-            input_frame, 
-            textvariable=self.port_var,
-            style='Custom.TCombobox'
+        self.port_combo = DarkCombobox(
+            input_frame,
+            background=self.colors['dark_element'],
+            foreground=self.colors['white']
         )
-        self.port_combo.grid(row=1, column=1, sticky=(tk.W, tk.E), pady=5) 
-        
-        # Style die Comboboxen
-        self.style_comboboxes()
+        self.port_combo.grid(row=1, column=1, sticky=(tk.W, tk.E), pady=5)
         
         # Button-Frame
         button_frame = ttk.Frame(main_frame)
@@ -463,7 +413,9 @@ class BACnetScannerGUI:
         try:
             ports = get_common_bacnet_ports()
             port_list = [f"{port} ({desc})" for port, desc in ports]
-            self.port_combo['values'] = port_list
+            
+            # Aktualisiere die Werte in der Combobox
+            self.port_combo.configure(values=port_list)
             
             # Setze den letzten verwendeten Wert oder den ersten in der Liste
             last_port = self.config.get('last_port')
@@ -472,14 +424,20 @@ class BACnetScannerGUI:
                     if str(last_port) in port_str:
                         self.port_combo.set(port_str)
                         break
+                else:  # Wenn der letzte Port nicht in der Liste ist
+                    self.port_combo.set(port_list[0] if port_list else "47808 (Standard BACnet Port)")
             elif port_list:
                 self.port_combo.set(port_list[0])
+            else:
+                self.port_combo.set("47808 (Standard BACnet Port)")
                 
             # Aktualisiere die GUI
             self.root.update()
             
         except Exception as e:
             print(f"Fehler in fill_port_list: {e}")
+            # Setze einen Standardwert im Fehlerfall
+            self.port_combo.set("47808 (Standard BACnet Port)")
     
     def on_ip_selected(self, event=None):
         """Wird aufgerufen, wenn eine neue IP ausgewählt wird"""
@@ -503,55 +461,61 @@ class BACnetScannerGUI:
     
     def get_selected_port(self):
         """Extrahiert den Port-Wert aus der Combo-Box-Auswahl"""
-        port_str = self.port_var.get().split()[0]
-        return int(port_str, 0)
+        try:
+            port_str = self.port_combo.get()  # Verwende direkt die Combobox statt der Variable
+            if not port_str:  # Wenn kein Wert ausgewählt ist
+                return 47808  # Standard BACnet Port als Fallback
+            
+            # Extrahiere den Port aus dem String (z.B. "47808 (Standard BACnet Port)")
+            port = port_str.split()[0]  # Nimm den ersten Teil vor dem Leerzeichen
+            return int(port)
+        except (IndexError, ValueError):
+            print("Fehler beim Lesen des Ports, verwende Standard-Port 47808")
+            return 47808  # Standard BACnet Port als Fallback
     
     def create_menu(self):
         """Erstellt die Menüleiste"""
-        menubar = tk.Menu(self.root)
-        self.root.config(menu=menubar)
         
+        # Erstelle die benutzerdefinierte Menüleiste
+        self.menubar = CustomMenuBar(  # Speichere als Instanzvariable
+            self.root,
+            bg_color=self.colors['dark_element'],
+            fg_color=self.colors['white'],
+            active_bg=self.colors['petrol'],
+            active_fg=self.colors['white']
+        )
+        self.menubar.grid(row=0, column=0, sticky='new')
+
         # Datei-Menü
-        file_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Datei", menu=file_menu)
-        
-        # Export-Untermenü
-        export_menu = tk.Menu(file_menu, tearoff=0)
-        file_menu.add_cascade(label="Exportieren als", menu=export_menu)
-        export_menu.add_command(label="CSV", command=self.export_csv)
-        
+        file_menu = self.menubar.add_menu("Datei")
+        file_menu.add_command(
+            label="Exportieren als CSV",
+            command=self.export_csv
+        )
         file_menu.add_separator()
-        file_menu.add_command(label="Beenden", command=self.on_closing)
-        
+        file_menu.add_command(
+            label="Beenden",
+            command=self.on_closing
+        )
+
         # Ansicht-Menü
-        view_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Ansicht", menu=view_menu)
-        view_menu.add_command(label="Fenster zentrieren", command=self.reset_window_position)
+        view_menu = self.menubar.add_menu("Ansicht")
+        view_menu.add_command(
+            label="Fenster zentrieren",
+            command=self.reset_window_position
+        )
         view_menu.add_separator()
-        view_menu.add_command(label="Theme wechseln", command=self.toggle_theme)
-    
+        view_menu.add_command(
+            label="Theme wechseln",
+            command=self.toggle_theme
+        )
 
         # Hilfe-Menü
-        help_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Hilfe", menu=help_menu)
-        help_menu.add_command(label="Über", command=self.show_about)
-
-        self.customize_menu(menubar)
-
-    def export_csv(self):
-        """Exportiert die Scan-Ergebnisse als CSV"""
-        if not self.networks:
-            messagebox.showwarning(
-                "Keine Daten",
-                "Es wurden noch keine Geräte gescannt. Bitte führen Sie zuerst einen Scan durch."
-            )
-            return
-        
-        success, message = export_to_csv(self.devices, self.networks)
-        if success:
-            messagebox.showinfo("Export erfolgreich", message)
-        else:
-            messagebox.showerror("Export fehlgeschlagen", message)
+        help_menu = self.menubar.add_menu("Hilfe")
+        help_menu.add_command(
+            label="Über",
+            command=self.show_about
+        )
 
     def show_about(self):
         """Zeigt Informationen über die Anwendung"""
@@ -568,7 +532,7 @@ class BACnetScannerGUI:
         
         self.result_text.delete(1.0, tk.END)
         self.status_var.set("Scan läuft...")
-        self.scan_button.state(['disabled'])
+        self.scan_button.configure(state='disabled')
         self.root.update()
         
         try:
@@ -595,7 +559,7 @@ class BACnetScannerGUI:
             self.networks = {}
         
         finally:
-            self.scan_button.state(['!disabled'])
+            self.scan_button.configure(state='normal')
             self.root.update()
 
     def toggle_theme(self):
@@ -607,37 +571,7 @@ class BACnetScannerGUI:
             # Wechsel zu Dunkel-Modus
             self.apply_theme('dark')
 
-    def style_comboboxes(self):
-        """Styling für die Comboboxen"""
-        style = ttk.Style()
-        
-        # Erstelle einen benutzerdefinierten Style für die Comboboxen
-        style.configure('Custom.TCombobox',
-            fieldbackground=self.colors['dark_element'],
-            background=self.colors['dark_element'],
-            foreground=self.colors['white'],
-            arrowcolor=self.colors['white']
-        )
-        
-        style.map('Custom.TCombobox',
-            fieldbackground=[('readonly', self.colors['dark_element'])],
-            selectbackground=[('readonly', self.colors['dark_element'])],
-            foreground=[('readonly', self.colors['white'])]
-        )
-
-        # Dropdown-Liste stylen
-        self.root.option_add('*TCombobox*Listbox.background', self.colors['dark_element'])
-        self.root.option_add('*TCombobox*Listbox.foreground', self.colors['white'])
-        self.root.option_add('*TCombobox*Listbox.selectBackground', self.colors['petrol'])
-        self.root.option_add('*TCombobox*Listbox.selectForeground', self.colors['white'])
-
-        # Comboboxen auf 'readonly' setzen und Style anwenden
-        for combo in [self.ip_combo, self.port_combo]:
-            combo.configure(
-                state='readonly',
-                style='Custom.TCombobox'
-            )
-            
+          
     def apply_theme(self, theme):
         """Wendet das ausgewählte Theme an"""
         if theme == 'light':
@@ -653,21 +587,15 @@ class BACnetScannerGUI:
         self.style.configure('.', background=bg_color, foreground=fg_color)
         self.root.configure(bg=bg_color)
         
-        # Aktualisiere Comboboxen
-        self.style.configure('TCombobox',
-            fieldbackground=element_bg,
-            foreground=fg_color
-        )
-        
         # Aktualisiere ScrolledText
         self.result_text.configure(
             background=element_bg,
             foreground=fg_color
         )
         
-        # Option-Menü Farben aktualisieren
-        self.root.option_add('*TCombobox*Listbox.background', element_bg)
-        self.root.option_add('*TCombobox*Listbox.foreground', fg_color)
+        # Aktualisiere Comboboxen mit den neuen Farben
+        self.ip_combo.configure(background=element_bg)
+        self.port_combo.configure(background=element_bg)
 
 def start_gui():
     root = tk.Tk()
