@@ -8,14 +8,10 @@ def create_who_is_message(low_limit=None, high_limit=None):
     if low_limit is None or high_limit is None:
         return bytes.fromhex('810b000801001008')
     else:
-        # Who-Is mit ID-Bereich
         return bytes.fromhex(f'810b000c01001008{low_limit:08x}{high_limit:08x}')
 
-def scan_bacnet():
+def scan_bacnet(local_ip, bacnet_port):
     """BACnet-Scan mit spezifischen ID-Bereichen"""
-    local_ip = '10.48.172.120'
-    bacnet_port = 0xBAC0
-    
     # Socket erstellen und konfigurieren
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
@@ -30,11 +26,11 @@ def scan_bacnet():
         # Spezifische ID-Bereiche für verschiedene Gerätetypen
         id_ranges = [
             (None, None),          # Standard Who-Is
-            (1000000, 1000999),    # PXM-Geräte
-            (2159000, 2159999),    # HVSH-Geräte
-            (3146000, 3146999),    # Automationsstationen
-            (4000000, 4199999),    # Weitere mögliche Bereiche
-            (5000, 5999)           # Edge Router und andere
+            (1000000, 1000020),    # PXM-Geräte
+            (2159618, 2159639),    # HVSH-Geräte
+            (3146754, 3146954),    # Automationsstationen
+            (4123123, 4123123),    # Siemens SBR
+            (5000, 5000)           # Edge Router
         ]
         
         print(f"[{datetime.now()}] Starting BACnet scan...")
@@ -102,6 +98,3 @@ def scan_bacnet():
     
     finally:
         sock.close()
-
-if __name__ == "__main__":
-    scan_bacnet()
