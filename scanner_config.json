@@ -1,0 +1,12 @@
+{
+    "last_ip": "172.16.13.145",
+    "last_port": 47808,
+    "window_size": "800x600",
+    "window_position": [
+        437,
+        181
+    ],
+    "last_export_path": null,
+    "scan_timeout": 2,
+    "scan_attempts": 5
+}

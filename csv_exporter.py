@@ -21,22 +21,39 @@ def export_to_csv(devices, networks):
         if not file_path:  # Wenn der Benutzer abbricht
             return False, "Export abgebrochen"
         
-        # CSV erstellen
-        with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
-            writer = csv.writer(csvfile)
+        # CSV erstellen mit erweiterter Formatierung
+        with open(file_path, 'w', newline='', encoding='utf-8-sig') as csvfile:
+            writer = csv.writer(csvfile, delimiter=';')
             
-            # Header schreiben
+            # Header mit Formatierung
+            writer.writerow(['BACnet Geräteliste'])
+            writer.writerow(['Erstellt am:', datetime.now().strftime("%Y-%m-%d")])
+            writer.writerow(['Uhrzeit:', datetime.now().strftime("%H:%M:%S")])
+            writer.writerow([])  # Leerzeile
+            
+            # Spaltenüberschriften
             writer.writerow(['Subnet', 'IP-Adresse', 'Device-ID', 'Zeitstempel'])
             
-            # Daten schreiben
+            # Daten nach Subnet sortiert
+            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            total_devices = 0
+            
             for subnet in sorted(networks.keys()):
-                for ip, device_id in sorted(networks[subnet]):
+                devices_in_subnet = networks[subnet]
+                total_devices += len(devices_in_subnet)
+                
+                for ip, device_id in sorted(devices_in_subnet):
                     writer.writerow([
                         subnet,
                         ip,
                         device_id if device_id is not None else 'Unbekannt',
-                        timestamp
+                        current_time
                     ])
+            
+            # Zusammenfassung am Ende
+            writer.writerow([])
+            writer.writerow(['Gesamtanzahl gefundener Geräte:', total_devices])
+            writer.writerow(['Scan durchgeführt von:', os.getenv('USERNAME', 'Unbekannt')])
         
         return True, f"Daten erfolgreich exportiert nach: {file_path}"
         
