@@ -488,16 +488,31 @@ class BACnetScannerGUI:
 
         # Datei-Menü
         file_menu = self.menubar.add_menu("Datei")
-        file_menu.add_command(
-            label="Exportieren als CSV",
-            command=self.export_csv
+        
+        # Export-Untermenü erstellen
+        export_menu = tk.Menu(
+            file_menu,
+            tearoff=0,
+            bg=self.colors['dark_element'],
+            fg=self.colors['white'],
+            activebackground=self.colors['petrol'],
+            activeforeground=self.colors['white']
         )
+        
+        # Export-Untermenü zum Datei-Menü hinzufügen
+        file_menu.add_cascade(label="Exportieren als", menu=export_menu)
+        
+        # Export-Optionen hinzufügen
+        export_menu.add_command(label="CSV", command=self.export_csv)
+        export_menu.add_command(label="Excel Binary (.xlsb)", command=self.export_excel)
+        
         file_menu.add_separator()
         file_menu.add_command(
             label="Beenden",
             command=self.on_closing
         )
 
+        # Rest bleibt unverändert...
         # Ansicht-Menü
         view_menu = self.menubar.add_menu("Ansicht")
         view_menu.add_command(
@@ -570,8 +585,7 @@ class BACnetScannerGUI:
         else:
             # Wechsel zu Dunkel-Modus
             self.apply_theme('dark')
-
-          
+   
     def apply_theme(self, theme):
         """Wendet das ausgewählte Theme an"""
         if theme == 'light':
@@ -596,6 +610,22 @@ class BACnetScannerGUI:
         # Aktualisiere Comboboxen mit den neuen Farben
         self.ip_combo.configure(background=element_bg)
         self.port_combo.configure(background=element_bg)
+
+    def export_excel(self):
+        """Exportiert die Scan-Ergebnisse als Excel-Datei"""
+        if not self.networks:
+            messagebox.showwarning(
+                "Keine Daten",
+                "Es wurden noch keine Geräte gescannt. Bitte führen Sie zuerst einen Scan durch."
+            )
+            return
+        
+        from excel_exporter import export_to_excel  # Import am Anfang der Datei oder hier
+        success, message = export_to_excel(self.devices, self.networks)
+        if success:
+            messagebox.showinfo("Export erfolgreich", message)
+        else:
+            messagebox.showerror("Export fehlgeschlagen", message)        
 
 def start_gui():
     root = tk.Tk()
