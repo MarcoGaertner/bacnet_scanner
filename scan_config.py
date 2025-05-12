@@ -110,11 +110,18 @@ class ScanConfig:
         """Aktualisiert die Aktivierung der Eigenschaften"""
         print("Aktualisiere Property-Einstellungen:")
         print("Eingehende Einstellungen:", settings)
-        for name, enabled in settings.items():
-            if name in self.properties:
-                print(f"Setze {name} auf {enabled}")
-                self.properties[name].enabled = enabled
-        print("Aktualisierte Properties:", {name: prop.enabled for name, prop in self.properties.items()})
+        
+        # Erstelle ein Mapping zwischen Anzeigenamen und internen Namen
+        name_mapping = {prop.name: key for key, prop in self.properties.items()}
+        
+        for display_name, enabled in settings.items():
+            if display_name in name_mapping:
+                internal_name = name_mapping[display_name]
+                self.properties[internal_name].enabled = enabled
+                print(f"Setze {internal_name} ({display_name}) auf {enabled}")
+        
+        print("Aktualisierte Properties:", 
+            {name: prop.enabled for name, prop in self.properties.items()})
 
 CONFIG_FILE = "config/scan_config.json"
 

@@ -66,6 +66,9 @@ class BACnetScannerGUI:
 
         # Lade gespeicherte Konfiguration
         self.scan_config = load_scan_config()
+        print("\nInitiale Scan-Konfiguration geladen:")
+        for name, prop in self.scan_config.properties.items():
+            print(f"- {name}: {prop.enabled}")
 
     def setup_styles(self):
         """Konfiguriert alle Styles"""
@@ -634,6 +637,12 @@ class BACnetScannerGUI:
             if hasattr(self, 'scan_config'):
                 scan_config.properties = self.scan_config.properties
             
+            # Hole aktivierte Properties
+            enabled_properties = scan_config.get_enabled_properties()
+            print(f"\nAktivierte Properties für Scan:")
+            for prop in enabled_properties:
+                print(f"- {prop.name} (ID: {prop.bacnet_id})")
+            
             # Scanner initialisieren
             from bacnet_scanner import BACnetScanner
             scanner = BACnetScanner(
@@ -645,8 +654,8 @@ class BACnetScannerGUI:
             scanner.timeout = scan_config.timeout
             scanner.attempts = scan_config.attempts
             
-            # Scan durchführen
-            self.devices, self.networks = scanner.scan()
+            # Scan durchführen mit aktivierten Properties
+            self.devices, self.networks = scanner.scan(properties=enabled_properties)
             
             # Ergebnisse anzeigen
             self.display_results({
@@ -774,8 +783,21 @@ class BACnetScannerGUI:
 
     def show_settings_dialog(self):
         """Öffnet den Einstellungen-Dialog"""
+        print("\nÖffne Einstellungen:")
+        print("Aktueller Zustand der Properties:")
+        for name, prop in self.scan_config.properties.items():
+            print(f"- {name}: {prop.enabled}")
+            
         dialog = ScanSettingsDialog(self.root, self.scan_config)
         self.root.wait_window(dialog.dialog)
+        
+        # Nach dem Schließen des Dialogs
+        print("\nNach Schließen des Dialogs:")
+        print("Zustand der Properties:")
+        for name, prop in self.scan_config.properties.items():
+            print(f"- {name}: {prop.enabled}")
+
+    
 
 def start_gui():
     root = tk.Tk()

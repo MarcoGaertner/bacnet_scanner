@@ -19,67 +19,67 @@
         "object_name": {
             "name": "Object Name",
             "category": "Grundlegende Identifikation",
-            "enabled": false,
+            "enabled": true,
             "bacnet_id": 77
         },
         "location": {
             "name": "Location",
             "category": "Grundlegende Identifikation",
-            "enabled": false,
+            "enabled": true,
             "bacnet_id": 58
         },
         "description": {
             "name": "Description",
             "category": "Grundlegende Identifikation",
-            "enabled": false,
+            "enabled": true,
             "bacnet_id": 28
         },
         "app_version": {
             "name": "Application Software Version",
             "category": "Grundlegende Identifikation",
-            "enabled": false,
+            "enabled": true,
             "bacnet_id": 12
         },
         "firmware": {
             "name": "Firmware Version",
             "category": "Grundlegende Identifikation",
-            "enabled": false,
+            "enabled": true,
             "bacnet_id": 0
         },
         "model_name": {
             "name": "Model Name",
             "category": "Grundlegende Identifikation",
-            "enabled": false,
+            "enabled": true,
             "bacnet_id": 70
         },
         "protocol_version": {
             "name": "Protocol Version",
             "category": "Netzwerkinformationen",
-            "enabled": false,
+            "enabled": true,
             "bacnet_id": 98
         },
         "protocol_services": {
             "name": "Protocol Services Supported",
             "category": "Netzwerkinformationen",
-            "enabled": false,
+            "enabled": true,
             "bacnet_id": 97
         },
         "protocol_types": {
             "name": "Protocol Object Types Supported",
             "category": "Netzwerkinformationen",
-            "enabled": false,
+            "enabled": true,
             "bacnet_id": 96
         },
         "segmentation": {
             "name": "Segmentation Supported",
             "category": "Netzwerkinformationen",
-            "enabled": false,
+            "enabled": true,
             "bacnet_id": 107
         },
         "max_apdu": {
             "name": "Max APDU Length",
             "category": "Netzwerkinformationen",
-            "enabled": false,
+            "enabled": true,
             "bacnet_id": 62
         },
         "system_status": {

@@ -196,6 +196,7 @@ class ScanSettingsDialog:
                 
                 # Properties hinzufügen
                 for i, prop in enumerate(properties):
+                    print(f"Erstelle Checkbox für {prop.name}: enabled={prop.enabled}")
                     var = tk.BooleanVar(value=prop.enabled)
                     self.checkboxes[prop.name] = var
                     
@@ -216,12 +217,47 @@ class ScanSettingsDialog:
                 
     def save_settings(self):
         """Speichert die ausgewählten Einstellungen"""
-        selected_items = {
-            item: var.get()
-            for item, var in self.checkboxes.items()
-        }
-        self.scan_config.update_property_settings(selected_items)
-        self.dialog.destroy()
+        try:
+            selected_items = {
+                item: var.get()
+                for item, var in self.checkboxes.items()
+            }
+            print("\nSpeichere Einstellungen:")
+            for item, enabled in selected_items.items():
+                print(f"- {item}: {enabled}")
+                
+            self.scan_config.update_property_settings(selected_items)
+            
+            # Debug: Überprüfe Zustand nach dem Update
+            print("\nZustand nach Update in scan_config:")
+            for name, prop in self.scan_config.properties.items():
+                print(f"- {name}: {prop.enabled}")
+            
+            # Speichere die Konfiguration
+            from scan_config import save_scan_config
+            save_scan_config(self.scan_config)
+            
+            # Zeige Erfolg an
+            success_label = ttk.Label(
+                self.dialog,
+                text="Einstellungen gespeichert!",
+                style='Success.TLabel',
+                font=('Arial', 10)
+            )
+            success_label.grid(row=2, column=0, pady=5)
+            self.dialog.after(1000, self.dialog.destroy)
+                
+        except Exception as e:
+            print(f"Fehler beim Speichern: {e}")
+            import traceback
+            traceback.print_exc()
+            error_label = ttk.Label(
+                self.dialog,
+                text=f"Fehler beim Speichern: {str(e)}",
+                style='Error.TLabel',
+                font=('Arial', 10)
+            )
+            error_label.grid(row=2, column=0, pady=5)
 
     def center_dialog(self):
         """Zentriert den Dialog auf dem Bildschirm"""
