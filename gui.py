@@ -13,6 +13,14 @@ from custom_menubar import CustomMenuBar
 import json
 from datetime import datetime
 from tkinter import filedialog
+from settings_dialog import ScanSettingsDialog
+from scan_config import (
+    ScanConfig,
+    save_scan_config, 
+    load_scan_config,
+    PropertyCategory,
+    BACnetProperty
+)
 
 class BACnetScannerGUI:
     def __init__(self, root):
@@ -55,6 +63,9 @@ class BACnetScannerGUI:
 
         #11 Speichert das aktuelle Scan-Ergebnis
         self.current_result = None
+
+        # Lade gespeicherte Konfiguration
+        self.scan_config = load_scan_config()
 
     def setup_styles(self):
         """Konfiguriert alle Styles"""
@@ -330,7 +341,12 @@ class BACnetScannerGUI:
     def on_closing(self):
         """Wird beim Schließen des Fensters aufgerufen"""
         try:
-            # Prüfe ob Fenster im Vollbildmodus ist
+            # 1. Speichere Scan-Konfiguration
+            self.scan_config.ip_address = self.ip_var.get()
+            self.scan_config.port = self.get_selected_port()
+            save_scan_config(self.scan_config)
+
+            # 2. Speichere Fenster-Konfiguration
             is_zoomed = False
             if platform.system() == 'Windows':
                 try:
@@ -338,42 +354,32 @@ class BACnetScannerGUI:
                 except:
                     pass
             
-            print(f"Fenster ist maximiert: {is_zoomed}")
+            window_size = "800x600"  # Standard-Größe
+            window_position = None    # Standard-Position
             
-            if not is_zoomed:  # Speichere Position nur wenn nicht maximiert
-                current_geometry = self.root.geometry()
+            if not is_zoomed:
                 x = self.root.winfo_x()
                 y = self.root.winfo_y()
                 
-                print(f"Aktuelle Geometrie: {current_geometry}")
-                print(f"Position: x={x}, y={y}")
-                
                 # Prüfe ob Position sinnvoll ist
                 if x >= 0 and y >= 0:
+                    current_geometry = self.root.geometry()
                     window_size = current_geometry.split('+')[0]
-                    print(f"Speichere Fenstergröße: {window_size}")
-                    print(f"Speichere Position: ({x}, {y})")
+                    window_position = (x, y)
                     
-                    save_config(
-                        self.ip_var.get(),
-                        self.get_selected_port(),
-                        window_size=window_size,
-                        window_position=(x, y),
-                        last_export_path=getattr(self, 'last_export_path', None)
-                    )
-            else:
-                # Wenn maximiert, speichere Standard-Größe
-                print("Fenster ist maximiert, speichere Standardgröße")
-                save_config(
-                    self.ip_var.get(),
-                    self.get_selected_port(),
-                    window_size="800x600",
-                    window_position=None,
-                    last_export_path=getattr(self, 'last_export_path', None)
-                )
+                    print(f"Speichere Fenstergeometrie: {window_size} at ({x}, {y})")
             
+            # Speichere Fenster-Konfiguration mit korrekten Keyword-Argumenten
+            save_config(
+                self.ip_var.get(),
+                self.get_selected_port(),
+                window_size=window_size,
+                window_position=window_position,
+                last_export_path=getattr(self, 'last_export_path', None)
+            )
+                
         except Exception as e:
-            print(f"Fehler beim Speichern der Fenstergeometrie: {e}")
+            print(f"Fehler beim Speichern der Konfigurationen: {e}")
             import traceback
             traceback.print_exc()
         
@@ -517,7 +523,13 @@ class BACnetScannerGUI:
             command=self.on_closing
         )
 
-        # Rest bleibt unverändert...
+        # Einstellungen-Menü
+        settings_menu = self.menubar.add_menu("Einstellungen")
+        settings_menu.add_command(
+            label="Scan-Einstellungen",
+            command=self.show_settings_dialog
+        )
+
         # Ansicht-Menü
         view_menu = self.menubar.add_menu("Ansicht")
         view_menu.add_command(
@@ -612,9 +624,26 @@ class BACnetScannerGUI:
         self.root.update()
         
         try:
+            # Erstelle Scan-Konfiguration
+            scan_config = ScanConfig(
+                ip_address=self.ip_var.get(),
+                port=self.get_selected_port()
+            )
+            
+            # Wenn Einstellungen bereits konfiguriert wurden, übernehme sie
+            if hasattr(self, 'scan_config'):
+                scan_config.properties = self.scan_config.properties
+            
             # Scanner initialisieren
             from bacnet_scanner import BACnetScanner
-            scanner = BACnetScanner(local_ip=self.ip_var.get(), bacnet_port=self.get_selected_port())
+            scanner = BACnetScanner(
+                local_ip=scan_config.ip_address,
+                bacnet_port=scan_config.port
+            )
+            
+            # Konfiguriere Scanner-Parameter nach der Initialisierung
+            scanner.timeout = scan_config.timeout
+            scanner.attempts = scan_config.attempts
             
             # Scan durchführen
             self.devices, self.networks = scanner.scan()
@@ -622,10 +651,7 @@ class BACnetScannerGUI:
             # Ergebnisse anzeigen
             self.display_results({
                 'timestamp': datetime.now().isoformat(),
-                'config': {
-                    'ip_address': self.ip_var.get(),
-                    'port': self.get_selected_port()
-                },
+                'config': scan_config.to_dict(),
                 'devices': self.devices,
                 'networks': self.networks
             })
@@ -745,6 +771,11 @@ class BACnetScannerGUI:
         except Exception as e:
             self.result_text.insert(tk.END, f"Fehler beim Anzeigen der Ergebnisse: {str(e)}\n")
             self.result_text.insert(tk.END, f"Rohdaten: {str(result)}\n")
+
+    def show_settings_dialog(self):
+        """Öffnet den Einstellungen-Dialog"""
+        dialog = ScanSettingsDialog(self.root, self.scan_config)
+        self.root.wait_window(dialog.dialog)
 
 def start_gui():
     root = tk.Tk()

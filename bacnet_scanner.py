@@ -1,4 +1,3 @@
-# bacnet_scanner.py
 import socket
 import struct
 import time
@@ -23,10 +22,21 @@ class BACnetScanner:
             return bytes.fromhex('810b000801001008')
         return bytes.fromhex(f'810b000c01001008{low_limit:08x}{high_limit:08x}')
 
-    def scan(self) -> Tuple[Dict, Dict]:
-        """Führt den BACnet-Scan durch"""
+    def scan(self, properties=None) -> Tuple[Dict, Dict]:
+        """
+        Führt den BACnet-Scan durch
+        
+        Args:
+            properties: Liste von BACnetProperty-Objekten, die abgefragt werden sollen
+        """
         devices = {}
         networks = {}
+        
+        # Debug-Ausgabe der Properties
+        if properties:
+            print(f"Scanning with {len(properties)} enabled properties:")
+            for prop in properties:
+                print(f"- {prop.name} (ID: {prop.bacnet_id})")
         
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
