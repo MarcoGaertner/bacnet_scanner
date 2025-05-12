@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox
 from ip_selector import get_network_interfaces
 from port_selector import get_common_bacnet_ports
-from bacnet_scanner import scan_bacnet
 from csv_exporter import export_to_csv
 import os
 import platform
@@ -11,6 +10,9 @@ from PIL import Image, ImageTk
 from config_manager import save_config, load_config
 from dark_combobox import DarkCombobox  
 from custom_menubar import CustomMenuBar
+import json
+from datetime import datetime
+from tkinter import filedialog
 
 class BACnetScannerGUI:
     def __init__(self, root):
@@ -50,6 +52,9 @@ class BACnetScannerGUI:
 
         # 10. Finale Initialisierung
         self.finalize_setup()
+
+        #11 Speichert das aktuelle Scan-Ergebnis
+        self.current_result = None
 
     def setup_styles(self):
         """Konfiguriert alle Styles"""
@@ -532,6 +537,12 @@ class BACnetScannerGUI:
             command=self.show_about
         )
 
+        #Scan laden
+        file_menu.add_command(
+        label="Scan laden",
+        command=self.load_scan
+        )
+
     def show_about(self):
         """Zeigt Informationen über die Anwendung"""
         messagebox.showinfo(
@@ -539,43 +550,6 @@ class BACnetScannerGUI:
             "BACnet Scanner\nVersion 1.0\n\n"
             "Ein Tool zum Scannen von BACnet-Geräten im Netzwerk."
         )
-
-    def start_scan(self):
-        """Startet den BACnet-Scan"""
-        # Speichere aktuelle Auswahl vor dem Scan
-        save_config(self.ip_var.get(), self.get_selected_port())
-        
-        self.result_text.delete(1.0, tk.END)
-        self.status_var.set("Scan läuft...")
-        self.scan_button.configure(state='disabled')
-        self.root.update()
-        
-        try:
-            import sys
-            from io import StringIO
-            old_stdout = sys.stdout
-            result_stream = StringIO()
-            sys.stdout = result_stream
-            
-            # Scan durchführen und Ergebnisse speichern
-            self.devices, self.networks = scan_bacnet(self.ip_var.get(), self.get_selected_port())
-            
-            # Ausgabe wiederherstellen und anzeigen
-            sys.stdout = old_stdout
-            scan_output = result_stream.getvalue()
-            self.result_text.insert(tk.END, scan_output)
-            
-            self.status_var.set("Scan abgeschlossen")
-            
-        except Exception as e:
-            self.result_text.insert(tk.END, f"Fehler beim Scan: {str(e)}")
-            self.status_var.set("Fehler aufgetreten")
-            self.devices = {}
-            self.networks = {}
-        
-        finally:
-            self.scan_button.configure(state='normal')
-            self.root.update()
 
     def toggle_theme(self):
         """Wechselt zwischen Hell- und Dunkel-Modus"""
@@ -626,6 +600,151 @@ class BACnetScannerGUI:
             messagebox.showinfo("Export erfolgreich", message)
         else:
             messagebox.showerror("Export fehlgeschlagen", message)        
+
+    def start_scan(self):
+        """Startet den BACnet-Scan"""
+        # Speichere aktuelle Auswahl vor dem Scan
+        save_config(self.ip_var.get(), self.get_selected_port())
+        
+        self.result_text.delete(1.0, tk.END)
+        self.status_var.set("Scan läuft...")
+        self.scan_button.configure(state='disabled')
+        self.root.update()
+        
+        try:
+            # Scanner initialisieren
+            from bacnet_scanner import BACnetScanner
+            scanner = BACnetScanner(local_ip=self.ip_var.get(), bacnet_port=self.get_selected_port())
+            
+            # Scan durchführen
+            self.devices, self.networks = scanner.scan()
+            
+            # Ergebnisse anzeigen
+            self.display_results({
+                'timestamp': datetime.now().isoformat(),
+                'config': {
+                    'ip_address': self.ip_var.get(),
+                    'port': self.get_selected_port()
+                },
+                'devices': self.devices,
+                'networks': self.networks
+            })
+            
+            self.status_var.set("Scan abgeschlossen")
+            
+        except Exception as e:
+            self.result_text.insert(tk.END, f"Fehler beim Scan: {str(e)}")
+            self.status_var.set("Fehler aufgetreten")
+            self.devices = {}
+            self.networks = {}
+        
+        finally:
+            self.scan_button.configure(state='normal')
+            self.root.update()
+
+    def load_scan(self):
+        """Lädt einen gespeicherten Scan"""
+        from tkinter import filedialog
+        filepath = filedialog.askopenfilename(
+            defaultextension=".json",
+            filetypes=[("JSON files", "*.json")],
+            initialdir="scan_results"
+        )
+        
+        if filepath:
+            try:
+                with open(filepath, 'r') as f:
+                    result = json.load(f)
+                
+                # Prüfe und konvertiere das Format
+                if isinstance(result, dict):
+                    # Stelle sicher, dass alle notwendigen Schlüssel existieren
+                    if 'devices' not in result:
+                        result['devices'] = {}
+                    if 'networks' not in result:
+                        result['networks'] = {}
+                    if 'config' not in result:
+                        result['config'] = {}
+                    
+                    # Konvertiere 'local_ip' zu 'ip_address' wenn nötig
+                    if 'local_ip' in result['config']:
+                        result['config']['ip_address'] = result['config']['local_ip']
+                    
+                    # Setze Standardwerte wenn Felder fehlen
+                    if not result['config'].get('ip_address'):
+                        result['config']['ip_address'] = self.ip_combo.get() or ''
+                    if not result['config'].get('port'):
+                        result['config']['port'] = result['config'].get('bacnet_port', self.get_selected_port() or 47808)
+                    
+                    # Setze Zeitstempel wenn nicht vorhanden
+                    if 'timestamp' not in result:
+                        result['timestamp'] = datetime.now().isoformat()
+
+                    # Speichere die Daten
+                    self.current_result = result
+                    self.devices = result['devices']
+                    self.networks = result['networks']
+                    
+                    # Aktualisiere die GUI-Elemente
+                    if result['config'].get('ip_address'):
+                        self.ip_combo.set(result['config']['ip_address'])
+                    if result['config'].get('port'):
+                        port_str = f"{result['config']['port']} (BACnet Port)"
+                        self.port_combo.set(port_str)
+
+                    # Zeige die Ergebnisse an
+                    self.display_results(result)
+                    self.status_var.set("Scan geladen")
+                else:
+                    raise ValueError("Ungültiges JSON-Format")
+                
+            except json.JSONDecodeError:
+                messagebox.showerror("Fehler", "Die Datei enthält kein gültiges JSON-Format")
+            except ValueError as e:
+                messagebox.showerror("Fehler", str(e))
+            except Exception as e:
+                messagebox.showerror("Fehler", f"Fehler beim Laden der Datei: {str(e)}")
+
+    def display_results(self, result):
+        """Zeigt die Scan-Ergebnisse an"""
+        self.result_text.delete(1.0, tk.END)
+        
+        try:
+            # Zeige Scan-Informationen
+            self.result_text.insert(tk.END, f"Scan durchgeführt am: {result.get('timestamp', 'Unbekannt')}\n")
+            
+            # Verwende entweder ip_address oder local_ip
+            ip = result.get('config', {}).get('ip_address') or result.get('config', {}).get('local_ip', 'Unbekannt')
+            port = result.get('config', {}).get('port') or result.get('config', {}).get('bacnet_port', 'Unbekannt')
+            
+            self.result_text.insert(tk.END, f"IP-Adresse: {ip}\n")
+            self.result_text.insert(tk.END, f"Port: {port}\n\n")
+            
+            # Zeige gefundene Geräte
+            self.result_text.insert(tk.END, "Gefundene Geräte:\n")
+            devices = result.get('devices', {})
+            if devices:
+                for ip, device_id in devices.items():
+                    id_str = f" (Device-ID: {device_id})" if device_id is not None else " (Keine Device-ID)"
+                    self.result_text.insert(tk.END, f"- {ip}{id_str}\n")
+            else:
+                self.result_text.insert(tk.END, "Keine Geräte gefunden\n")
+            
+            # Zeige Netzwerke
+            self.result_text.insert(tk.END, "\nGefundene Netzwerke:\n")
+            networks = result.get('networks', {})
+            if networks:
+                for subnet, devices in networks.items():
+                    self.result_text.insert(tk.END, f"\nNetzwerk {subnet}:\n")
+                    for ip, device_id in devices:
+                        id_str = f" (Device-ID: {device_id})" if device_id is not None else " (Keine Device-ID)"
+                        self.result_text.insert(tk.END, f"  - {ip}{id_str}\n")
+            else:
+                self.result_text.insert(tk.END, "Keine Netzwerke gefunden\n")
+                
+        except Exception as e:
+            self.result_text.insert(tk.END, f"Fehler beim Anzeigen der Ergebnisse: {str(e)}\n")
+            self.result_text.insert(tk.END, f"Rohdaten: {str(result)}\n")
 
 def start_gui():
     root = tk.Tk()
