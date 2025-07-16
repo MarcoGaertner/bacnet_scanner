@@ -1,17 +1,10 @@
-"""
-BACnet Scanner - Haupteinstiegspunkt der Anwendung
-"""
-
-import os
 import sys
+import os
 
-# Füge das Projektverzeichnis zum Pfad hinzu
-sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+# Füge das Projektverzeichnis zum Python-Suchpfad hinzu
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-# Importiere Factory-Registrierungen
-from ui.factory_registers import *
 from ui.main import BACnetScannerApp
 
-if __name__ == "__main__":
-    app = BACnetScannerApp()
-    app.run()
+if __name__ == '__main__':
+    BACnetScannerApp().run()

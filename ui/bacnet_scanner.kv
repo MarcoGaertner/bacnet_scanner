@@ -1,0 +1,15 @@
+#:import Sidebar ui.widgets.sidebar.Sidebar
+#:import FadeTransition kivy.uix.screenmanager.FadeTransition
+#:import colors ui.styles.colors
+
+BoxLayout:
+    orientation: 'horizontal'
+    
+    # Sidebar auf der linken Seite (vorher war sie nach dem AppScreenManager)
+    Sidebar:
+        id: sidebar
+        screen_manager: screen_manager
+    
+    # Hauptinhaltbereich
+    AppScreenManager:
+        id: screen_manager
