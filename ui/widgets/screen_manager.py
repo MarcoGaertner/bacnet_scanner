@@ -1,5 +1,6 @@
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.lang import Builder
+from core.events import event_bus  # Wichtig: EventBus importieren
 
 # Screen-Klassen importieren
 from ui.screens.connection_screen import ConnectionScreen
@@ -14,10 +15,25 @@ from ui.screens.info_screen import InfoScreen
 Builder.load_file('ui/widgets/screen_manager.kv')
 
 class AppScreenManager(ScreenManager):
+    """Screen Manager mit Unterstützung für Mehrsprachigkeit"""
+    
+    # Zuordnung von Übersetzungsschlüsseln zu internen Screen-Namen
+    # Diese Schlüssel bleiben konstant, unabhängig von der Sprache
+    SCREEN_MAPPING = {
+        'sidebar.connection': 'verbindung',
+        'sidebar.devices': 'geräte',
+        'sidebar.account': 'konto', 
+        'sidebar.settings': 'einstellungen',
+        'sidebar.files': 'dateien',
+        'sidebar.trend': 'online_trend',
+        'sidebar.help': 'hilfe',
+        'sidebar.info': 'info'
+    }
+    
     def __init__(self, **kwargs):
         super(AppScreenManager, self).__init__(**kwargs)
         
-        # Alle Screens hinzufügen
+        # Alle Screens hinzufügen - Verwende konstante interne Namen
         self.add_widget(ConnectionScreen(name='verbindung'))
         self.add_widget(DevicesScreen(name='geräte'))
         self.add_widget(AccountScreen(name='konto'))
@@ -26,3 +42,17 @@ class AppScreenManager(ScreenManager):
         self.add_widget(TrendScreen(name='online_trend'))
         self.add_widget(HelpScreen(name='hilfe'))
         self.add_widget(InfoScreen(name='info'))
+        
+        # Reagiere auf Sprachänderungen
+        event_bus.bind(on_language_changed=self.on_language_changed)
+    
+    def get_screen_name_from_key(self, tab_key):
+        """Gibt den internen Screen-Namen für einen Übersetzungsschlüssel zurück"""
+        return self.SCREEN_MAPPING.get(tab_key, 'verbindung')  # Fallback auf Verbindungs-Screen
+    
+    def on_language_changed(self, instance, language_code):
+        """Wird aufgerufen, wenn die Sprache geändert wird"""
+        # Aktualisiere alle Screens
+        for screen in self.screens:
+            if hasattr(screen, 'reload_language'):
+                screen.reload_language()

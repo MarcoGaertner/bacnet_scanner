@@ -27,3 +27,21 @@ class EventDispatcher:
 
 # Globale Event-Dispatcher-Instanz
 event_dispatcher = EventDispatcher()
+
+from kivy.event import EventDispatcher
+
+class EventBus(EventDispatcher):
+    def __init__(self, **kwargs):
+        self.register_event_type('on_theme_changed')
+        self.register_event_type('on_language_changed')
+        super(EventBus, self).__init__(**kwargs)
+    
+    def on_theme_changed(self, theme_name):
+        pass
+
+
+    def on_language_changed(self, language_code):  # Neu
+        pass
+
+# Globale Event-Bus-Instanz
+event_bus = EventBus()

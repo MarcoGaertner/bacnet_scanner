@@ -1,24 +1,46 @@
 #:import colors ui.styles.colors
 
-<SettingsScreen>:
-    canvas.before:
-        Color:
-            rgba: colors.BACKGROUND
-        Rectangle:
-            pos: self.pos
-            size: self.size
+<SettingSection>:
+    size_hint_y: None
+    height: dp(50)
+    orientation: 'vertical'
+    padding: [dp(15), dp(10)]
+    spacing: dp(5)
     
+    Label:
+        text: root.title
+        font_size: dp(16)
+        color: (0, 0.6, 0.6, 1)  # #009999
+        size_hint_y: None
+        height: dp(30)
+        halign: 'left'
+        text_size: self.size
+        valign: 'bottom'
+
+<SettingsScreen>:
     BoxLayout:
         orientation: 'vertical'
         padding: dp(20)
+        spacing: dp(15)
         
         Label:
-            text: "Einstellungs-Tab"
+            text: root.screen_title
             font_size: dp(24)
-            color: colors.TEXT_PRIMARY
+            color: (0, 0.6, 0.6, 1)  # #009999
             size_hint_y: None
             height: dp(40)
             halign: 'left'
             text_size: self.size
+            valign: 'middle'
         
-        Widget:  # Platzhalter für späteren Inhalt
+        SettingSection:
+            title: root.section_title
+        
+        BoxLayout:
+            id: ui_settings_container
+            orientation: 'vertical'
+            spacing: dp(2)
+            size_hint_y: None
+            height: self.minimum_height
+        
+        Widget:  # Flexibler Platzhalter

@@ -1,7 +1,7 @@
-from kivy.uix.screenmanager import Screen
 from kivy.lang import Builder
+from ui.screens.base_screen import BaseScreen 
 
 Builder.load_file('ui/screens/connection_screen.kv')
 
-class ConnectionScreen(Screen):
+class ConnectionScreen(BaseScreen): 
     pass

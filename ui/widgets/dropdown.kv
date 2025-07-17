@@ -1,0 +1,68 @@
+<SettingsDropdownItem>:
+    size_hint_y: None
+    height: dp(40)
+    background_normal: ''
+    background_color: self.bg_color  # Verwende die dynamische Property
+    color: self.text_color  # Verwende die dynamische Property
+    font_size: dp(14)
+    halign: 'left'
+    padding_x: dp(15)
+    text_size: self.size
+    valign: 'middle'
+    
+    canvas.before:
+        Color:
+            rgba: self.bg_color
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+<NestedDropdown>:
+    size_hint_y: None
+    height: dp(44)
+    orientation: 'horizontal'
+    spacing: dp(10)
+    padding: [dp(15), 0]
+    
+    canvas.before:
+        Color:
+            rgba: self.bg_color
+        Rectangle:
+            pos: self.pos
+            size: self.size
+        Color:
+            rgba: self.border_color
+        Line:
+            points: self.x, self.y, self.x + self.width, self.y
+            width: 1
+    
+    Label:
+        size_hint_x: 0.4
+        text: root.title
+        color: root.text_color
+        font_size: dp(14)
+        halign: 'left'
+        text_size: self.size
+        valign: 'middle'
+    
+    Button:
+        id: btn
+        size_hint_x: 0.6
+        text: root.current_value
+        background_normal: ''
+        background_color: root.button_bg_color
+        color: root.text_color
+        font_size: dp(14)
+        halign: 'center'
+        on_release: root.open_dropdown(self)
+        
+        canvas.after:
+            Color:
+                rgba: root.arrow_color
+            Triangle:
+                # Dynamische Punkte basierend auf is_open-Property
+                # Nach oben zeigendes Dreieck wenn geöffnet, sonst nach unten
+                points: 
+                    self.right - dp(15), self.center_y - dp(2) if root.is_open else self.center_y + dp(2), \
+                    self.right - dp(10), self.center_y - dp(2) if root.is_open else self.center_y + dp(2), \
+                    self.right - dp(12.5), self.center_y + dp(3) if root.is_open else self.center_y - dp(3)
