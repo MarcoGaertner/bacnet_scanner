@@ -1,4 +1,5 @@
 #:import colors ui.styles.colors
+#:import _ core.i18n.translator._
 
 <AccountScreen>:
     canvas.before:
@@ -11,14 +12,43 @@
     BoxLayout:
         orientation: 'vertical'
         padding: dp(20)
+        spacing: dp(15)
         
         Label:
-            text: "Benutzer-Tab"
+            text: root.screen_title
             font_size: dp(24)
-            color: colors.TEXT_PRIMARY
+            color: colors.HIGHLIGHT_COLOR
             size_hint_y: None
             height: dp(40)
             halign: 'left'
             text_size: self.size
+            valign: 'middle'
         
-        Widget:  # Platzhalter für späteren Inhalt
+        ScrollView:
+            do_scroll_x: False
+            
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(15)
+                
+                ExpandablePanel:
+                    id: name_dropdown
+                    title: _("account.name")
+                
+                ExpandablePanel:
+                    id: phone_dropdown
+                    title: _("account.phone")
+                
+                ExpandablePanel:
+                    id: email_dropdown
+                    title: _("account.email")
+                
+                ExpandablePanel:
+                    id: company_dropdown
+                    title: _("account.company")
+                
+                Widget:
+                    size_hint_y: None
+                    height: dp(20)

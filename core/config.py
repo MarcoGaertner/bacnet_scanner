@@ -10,6 +10,7 @@ class ConfigManager:
         self.base_dir = Path(os.path.dirname(os.path.abspath(__file__))).parent
         self.config_dir = self.base_dir / config_dir
         self.ui_config_file = self.config_dir / "ui_settings.json"
+        self.user_config_file = self.config_dir / "user_settings.json"
         
         # Standardeinstellungen
         self.default_settings = {
@@ -17,6 +18,13 @@ class ConfigManager:
                 "language": "deutsch",
                 "theme": "hell",
                 "units": "metrisch"
+            },
+            "user": {  # NEU
+                "first_name": "",
+                "last_name": "",
+                "phone": "",
+                "email": "",
+                "company": ""
             }
         }
         

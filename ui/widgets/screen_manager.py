@@ -45,6 +45,9 @@ class AppScreenManager(ScreenManager):
         
         # Reagiere auf Sprachänderungen
         event_bus.bind(on_language_changed=self.on_language_changed)
+        event_bus.bind(on_theme_changed=self.on_theme_changed)
+        event_bus.bind(on_theme_changed=self.debug_theme_update)
+    
     
     def get_screen_name_from_key(self, tab_key):
         """Gibt den internen Screen-Namen für einen Übersetzungsschlüssel zurück"""
@@ -56,3 +59,37 @@ class AppScreenManager(ScreenManager):
         for screen in self.screens:
             if hasattr(screen, 'reload_language'):
                 screen.reload_language()
+
+    def on_theme_changed(self, instance, theme_name):
+        """Wird aufgerufen, wenn das Theme geändert wird"""
+        print("ScreenManager: Theme wurde geändert zu", theme_name)
+        
+        # Canvas des ScreenManagers aktualisieren
+        if hasattr(self, 'canvas'):
+            self.canvas.ask_update()
+            if hasattr(self.canvas, 'before'):
+                self.canvas.before.flag_update()
+            if hasattr(self.canvas, 'after'):
+                self.canvas.after.flag_update()
+        
+        # Theme-Update an alle Screens weitergeben
+        for screen in self.screens:
+            if hasattr(screen, 'reload_theme'):
+                screen.reload_theme()
+
+
+    def debug_theme_update(self):
+        """Zeigt an, welche Komponenten aktualisiert werden"""
+        print("\n--- Theme-Update-Debug ---")
+        print(f"Window.clearcolor: {Window.clearcolor}")
+        
+        if hasattr(self, 'root'):
+            print(f"Root has canvas: {hasattr(self.root, 'canvas')}")
+            
+            if hasattr(self.root.ids, 'screen_manager'):
+                sm = self.root.ids.screen_manager
+                print(f"ScreenManager has canvas: {hasattr(sm, 'canvas')}")
+                print(f"ScreenManager has canvas.before: {hasattr(sm.canvas, 'before')}")
+                print(f"Current screen: {sm.current_screen.name}")
+        
+        print("------------------------\n")

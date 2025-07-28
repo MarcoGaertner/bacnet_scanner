@@ -1,23 +1,14 @@
 #:import colors ui.styles.colors
-
-<SettingSection>:
-    size_hint_y: None
-    height: dp(50)
-    orientation: 'vertical'
-    padding: [dp(15), dp(10)]
-    spacing: dp(5)
-    
-    Label:
-        text: root.title
-        font_size: dp(16)
-        color: (0, 0.6, 0.6, 1)  # #009999
-        size_hint_y: None
-        height: dp(30)
-        halign: 'left'
-        text_size: self.size
-        valign: 'bottom'
+#:import _ core.i18n.translator._
 
 <SettingsScreen>:
+    canvas.before:
+        Color:
+            rgba: colors.TAB_BACKGROUND
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    
     BoxLayout:
         orientation: 'vertical'
         padding: dp(20)
@@ -26,21 +17,36 @@
         Label:
             text: root.screen_title
             font_size: dp(24)
-            color: (0, 0.6, 0.6, 1)  # #009999
+            color: colors.HIGHLIGHT_COLOR
             size_hint_y: None
             height: dp(40)
             halign: 'left'
             text_size: self.size
             valign: 'middle'
         
-        SettingSection:
-            title: root.section_title
-        
-        BoxLayout:
-            id: ui_settings_container
-            orientation: 'vertical'
-            spacing: dp(2)
+        Label:
+            text: root.section_title
+            font_size: dp(16)
+            color: colors.HIGHLIGHT_COLOR
             size_hint_y: None
-            height: self.minimum_height
+            height: dp(30)
+            halign: 'left'
+            text_size: self.size
+            valign: 'bottom'
         
-        Widget:  # Flexibler Platzhalter
+        ScrollView:
+            do_scroll_x: False
+            size_hint_y: 1  # Nimmt den gesamten verbleibenden Platz ein
+            bar_width: dp(5)  # Breite der Scrollbar
+            
+            BoxLayout:
+                id: settings_container
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(15)
+                padding: [0, dp(10), 0, dp(20)]  # Etwas Padding unten hinzufügen
+                
+                # Widget:  # Optional: Ein Spacer am Ende, um beim Scrollen mehr Platz zu haben
+                #     size_hint_y: None
+                #     height: dp(30)

@@ -1,36 +1,36 @@
-from ui.screens.base_screen import BaseScreen 
+from ui.screens.base_screen import BaseScreen
 from kivy.uix.boxlayout import BoxLayout
 from kivy.lang import Builder
-from kivy.properties import ObjectProperty, StringProperty
-
+from kivy.properties import StringProperty, ObjectProperty
 from ui.widgets.dropdown import NestedDropdown
+from ui.widgets.expandable_panel import ExpandablePanel
 from core.config import ConfigManager
 from core.i18n.translator import _
 from core.events import event_bus
+from kivy.clock import Clock
 
 # KV-Datei laden
 Builder.load_file('ui/screens/settings_screen.kv')
 
-class SettingSection(BoxLayout):
-    title = StringProperty("")
-
 class SettingsScreen(BaseScreen):
-    # Überschriften als StringProperty definieren
+    """Screen für Anwendungseinstellungen"""
     screen_title = StringProperty("")
     section_title = StringProperty("")
+    config_manager = ObjectProperty(None)
     
     def __init__(self, **kwargs):
         super(SettingsScreen, self).__init__(**kwargs)
         self.config_manager = ConfigManager()
         
-        # UI nach dem Aufbau des Screens initialisieren
-        self.bind(size=self.setup_ui)
-
-        # Überschriften initial setzen
+        # Übersetzungen aktualisieren
         self.update_translations()
         
-        # Events beobachten
+        # Event-Listener für Sprachänderungen
         event_bus.bind(on_language_changed=self.on_language_changed)
+        event_bus.bind(on_theme_changed=self.on_theme_changed)
+        
+        # UI aufbauen, nachdem das Layout geladen ist
+        self.bind(size=self.setup_ui)
     
     def update_translations(self):
         """Aktualisiert alle übersetzten Texte"""
@@ -38,44 +38,51 @@ class SettingsScreen(BaseScreen):
         self.section_title = _("settings.ui.section")
     
     def setup_ui(self, *args):
-        # Container leeren und UI-Elemente hinzufügen
-        settings_container = self.ids.ui_settings_container
-        settings_container.clear_widgets()
+        """Erstellt die UI mit den Einstellungen"""
+        # Container leeren
+        self.ids.settings_container.clear_widgets()
         
         # Aktuellen Wert aus der Konfiguration laden
         language = self.config_manager.get_setting("ui", "language")
         theme = self.config_manager.get_setting("ui", "theme")
         units = self.config_manager.get_setting("ui", "units")
         
-        # Sprache Dropdown
+        # Sprache Panel
+        language_panel = ExpandablePanel(title=_("settings.language"))
         language_dropdown = NestedDropdown(
-            title=_("settings.language"),
+            title="",  # Kein Titel innerhalb des Panels
             options=[_("language.german"), _("language.english")],
             current_value=_("language.german") if language == "deutsch" else _("language.english")
         )
         language_dropdown.on_select = lambda value: self.update_language_setting(value)
+        language_panel.ids.content.add_widget(language_dropdown)
+        self.ids.settings_container.add_widget(language_panel)
         
-        # Design Dropdown
+        # Design Panel
+        theme_panel = ExpandablePanel(title=_("settings.theme"))
         theme_dropdown = NestedDropdown(
-            title=_("settings.theme"),
+            title="",
             options=[_("theme.light"), _("theme.dark")],
             current_value=_("theme.light") if theme == "hell" else _("theme.dark")
         )
         theme_dropdown.on_select = lambda value: self.update_theme_setting(value)
+        theme_panel.ids.content.add_widget(theme_dropdown)
+        self.ids.settings_container.add_widget(theme_panel)
         
-        # Einheitensystem Dropdown
+        # Einheitensystem Panel
+        units_panel = ExpandablePanel(title=_("settings.units"))
         units_dropdown = NestedDropdown(
-            title=_("settings.units"),
+            title="",
             options=[_("units.metric"), _("units.imperial")],
             current_value=_("units.metric") if units == "metrisch" else _("units.imperial")
         )
         units_dropdown.on_select = lambda value: self.update_units_setting(value)
+        units_panel.ids.content.add_widget(units_dropdown)
+        self.ids.settings_container.add_widget(units_panel)
         
-        # Widgets zum Container hinzufügen
-        settings_container.add_widget(language_dropdown)
-        settings_container.add_widget(theme_dropdown)
-        settings_container.add_widget(units_dropdown)
-
+        # Verzögerte Panel-Aktualisierung
+        Clock.schedule_once(self._update_panels, 0.2)
+    
     def update_language_setting(self, value):
         """Aktualisiert die Spracheinstellung"""
         language_code = "deutsch" if value == _("language.german") else "englisch"
@@ -93,20 +100,36 @@ class SettingsScreen(BaseScreen):
     
     def on_language_changed(self, instance, language_code):
         """Wird aufgerufen, wenn sich die Sprache ändert"""
-        self.update_translations()  # Überschriften aktualisieren
-        self.setup_ui()  # UI mit neuen Übersetzungen aktualisieren
+        self.update_translations()
+        self.setup_ui()
     
     def reload_language(self):
         """Implementiere die reload_language-Methode der BaseScreen-Klasse"""
         self.update_translations()
         self.setup_ui()
     
-    def update_setting(self, key, value):
-        """Aktualisiert eine Einstellung und speichert sie"""
-        self.config_manager.update_setting("ui", key, value)
+    def on_theme_changed(self, instance, theme_name):
+        """Wird aufgerufen, wenn sich das Theme ändert"""
+        self.reload_theme()
+    
+    def reload_theme(self):
+        """Implementierung der reload_theme-Methode der BaseScreen-Klasse"""
+        # Canvas aktualisieren (für Hintergrund)
+        self.canvas.ask_update()
         
-        # Bei Theme-Änderung sofort die UI aktualisieren
-        if key == "theme":
-            # Die Aktualisierung erfolgt automatisch über den EventBus
-            # Aber wir können auch die eigene UI direkt aktualisieren
-            self.reload_theme()
+        # Farben in allen Komponenten aktualisieren
+        for child in self.walk():
+            if hasattr(child, 'update_colors'):
+                child.update_colors()
+        
+        # UI mit aktualisierten Farben neu aufbauen
+        self.setup_ui()
+
+    def _update_panels(self, dt):
+        """Aktualisiert die Panel-Zustände"""
+        for panel_id in ['language_panel', 'theme_panel', 'units_panel']:
+            if hasattr(self.ids, panel_id):
+                panel = getattr(self.ids, panel_id)
+                # Explizit den aktuellen Zustand neu setzen
+                expanded = panel.is_expanded
+                panel._update_panel_state(expanded)

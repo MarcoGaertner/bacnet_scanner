@@ -17,10 +17,11 @@ class CustomDropDown(DropDown):
     
     def __init__(self, **kwargs):
         super(CustomDropDown, self).__init__(**kwargs)
+        
         # Theme-Änderungen beobachten
         event_bus.bind(on_theme_changed=self.on_theme_changed)
         # Container-Farbe setzen, wenn das Dropdown geöffnet wird
-        self.bind(on_open=self.update_dropdown_container,)
+        self.bind(on_open=self.update_dropdown_container)
         # Initial Farben setzen
         self.update_colors()
     
@@ -55,6 +56,7 @@ class CustomDropDown(DropDown):
         if self.attach_to:
             self.update_dropdown_container()
 
+
 class SettingsDropdownItem(Button):
     """Button-Item für das Dropdown-Menü"""
     bg_color = ListProperty([1, 1, 1, 1])
@@ -77,6 +79,7 @@ class SettingsDropdownItem(Button):
         """Bei Theme-Änderung aktualisieren"""
         self.update_colors()
 
+
 class NestedDropdown(BoxLayout):
     """Verschachteltes Dropdown-Menü mit Theme-Support"""
     title = StringProperty('')
@@ -94,17 +97,24 @@ class NestedDropdown(BoxLayout):
     
     def __init__(self, **kwargs):
         super(NestedDropdown, self).__init__(**kwargs)
+        
         # Angepasstes Dropdown verwenden
         self.dropdown = CustomDropDown()
-
+        
+        # Verzögerte Initialisierung
+        from kivy.clock import Clock
+        Clock.schedule_once(self._setup_dropdown, 0.1)
+    
+    def _setup_dropdown(self, dt):
+        """Initialisiert das Dropdown mit den Optionen"""
+        # Sicherstellen, dass das Dropdown leer ist
+        self.dropdown.clear_widgets()
+        
         # Schließereignisse beobachten
         self.dropdown.bind(on_dismiss=self.on_dropdown_dismiss)
         
         # Farben initialisieren
         self.update_colors()
-        
-        # Theme-Änderungen beobachten
-        event_bus.bind(on_theme_changed=self.on_theme_changed)
         
         # Dropdown-Items erstellen
         for option in self.options:
@@ -114,6 +124,9 @@ class NestedDropdown(BoxLayout):
         
         # Dropdown-Auswahl binden
         self.dropdown.bind(on_select=self.on_dropdown_select)
+        
+        # Debug-Info
+        print(f"Dropdown '{self.title}' initialisiert mit {len(self.options)} Optionen")
     
     def on_dropdown_dismiss(self, instance):
         """Wird aufgerufen, wenn das Dropdown geschlossen wird"""

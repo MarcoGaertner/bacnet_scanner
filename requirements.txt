@@ -1,0 +1,38 @@
+# Grundlegende Kivy-Installation
+kivy==2.3.1
+kivy-deps.angle==0.4.0  # Für Windows
+kivy-deps.glew==0.3.1   # Für Windows
+kivy-deps.sdl2==0.8.0   # Für Windows
+pillow==10.3.0          # Für Bildverarbeitung und Icon-Erstellung
+
+# BACnet-Bibliotheken
+bacpypes==0.18.8        # BACnet-Protokoll-Implementierung
+BAC0==23.11.4           # BACnet-Client-Bibliothek mit höherem Abstraktionsniveau
+
+# Hilfsbibliotheken
+requests==2.31.0        # Für HTTP-Anfragen
+python-dateutil==2.8.2  # Für Datums- und Zeitoperationen
+pytz==2024.1            # Für Zeitzonen-Unterstützung
+
+# Entwicklungswerkzeuge
+pytest==8.0.0           # Für Tests
+pytest-cov==4.1.0       # Für Testabdeckung
+flake8==7.0.0           # Für Codequalität
+black==24.3.0           # Für Codeformatierung
+
+# Zusätzliche UI-Komponenten
+kivy-garden.graph==0.4.0  # Für Diagramme und Trends
+kivymd==1.1.1             # Material Design Komponenten (optional)
+
+# Datenverarbeitung und -speicherung
+pandas==2.2.0           # Für Datenanalyse und -manipulation
+sqlalchemy==2.0.28      # Für Datenbankoperationen
+pyyaml==6.0.1           # Für Konfigurationsdateien
+
+# Systemintegration
+pywin32==306; platform_system=="Windows"  # Für Windows-spezifische Funktionen
+psutil==5.9.8           # Für Systemüberwachung und -ressourcen
+
+# Dokumentation
+sphinx==7.2.6           # Für Dokumentationsgenerierung
+sphinx-rtd-theme==2.0.0 # Read the Docs Theme für Sphinx

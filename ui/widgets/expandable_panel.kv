@@ -1,0 +1,61 @@
+<ExpandablePanel>:
+    orientation: 'vertical'
+    size_hint_y: None
+    height: root.header_height + (root.panel_spacing + root.ids.content.height if root.is_expanded else 0)
+    spacing: dp(5) if root.is_expanded else 0  # Kein Spacing, wenn geschlossen
+    
+    BoxLayout:
+        size_hint_y: None
+        height: root.header_height
+        
+        canvas.before:
+            Color:
+                rgba: root.bg_color
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+                radius: [dp(8), dp(8), dp(0 if root.is_expanded else 8), dp(0 if root.is_expanded else 8)]
+        
+        Label:
+            text: root.title
+            color: root.text_color
+            font_size: dp(16)
+            bold: True
+            halign: 'left'
+            valign: 'middle'
+            text_size: self.size
+            padding_x: dp(15)
+        
+        Button:
+            id: toggle_btn
+            size_hint_x: None
+            width: dp(40)
+            background_normal: ''
+            background_color: (0, 0, 0, 0)
+            on_release:
+                print(f"DEBUG: Button in '{root.title}' geklickt")
+                root.toggle_expansion()  # Verwende on_press statt on_release für schnellere Reaktion
+            
+            canvas.after:
+                Color:
+                    rgba: root.text_color
+                Triangle:
+                    points: root.get_arrow_points(self.center_x, self.center_y)
+    
+    BoxLayout:
+        id: content
+        orientation: 'vertical'
+        size_hint_y: None
+        height: self.minimum_height if root.is_expanded else 0
+        opacity: 1 if root.is_expanded else 0
+        disabled: not root.is_expanded
+        padding: [dp(15), dp(15), dp(15), dp(15)]
+        spacing: dp(10)
+        
+        canvas.before:
+            Color:
+                rgba: root.bg_color
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+                radius: [dp(0), dp(0), dp(8), dp(8)]

@@ -1,0 +1,47 @@
+<ToggleSwitch>:
+    size_hint_y: None
+    height: dp(60)
+    padding: dp(15)
+    spacing: dp(10)
+    
+    canvas.before:
+        Color:
+            rgba: root.bg_color
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(8)]
+    
+    Label:
+        text: root.text
+        color: root.text_color
+        font_size: dp(16)
+        text_size: self.size
+        halign: 'left'
+        valign: 'middle'
+    
+    BoxLayout:
+        size_hint: None, None
+        size: dp(50), dp(30)
+        pos_hint: {'center_y': 0.5}
+        
+        canvas.before:
+            # Hintergrund des Switches
+            Color:
+                rgba: [0.7, 0.7, 0.7, 1] if not root.active else root.switch_color
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+                radius: [dp(15)]
+            
+            # Beweglicher Teil des Switches
+            Color:
+                rgba: [1, 1, 1, 1]
+            Ellipse:
+                pos: [self.pos[0] + dp(5), self.pos[1] + dp(5)] if not root.active else [self.pos[0] + self.width - dp(25), self.pos[1] + dp(5)]
+                size: [dp(20), dp(20)]
+        
+        # Unsichtbarer Button für Klick-Events
+        Button:
+            background_color: 0, 0, 0, 0
+            on_release: root.toggle()

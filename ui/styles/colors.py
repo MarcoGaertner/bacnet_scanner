@@ -38,7 +38,6 @@ PRIMARY = None
 # Theme-Manager
 class ThemeManager:
     @staticmethod
-
     def set_theme(theme_name="hell"):
         """Setzt das aktuelle Theme basierend auf dem Namen"""
         if theme_name.lower() == "dunkel":
@@ -73,10 +72,19 @@ def get_color_with_alpha(color_name, alpha):
         return (color[0], color[1], color[2], alpha)
     return (0, 0, 0, alpha)  # Fallback zu Schwarz mit angegebenem Alpha
 
-# Initialisiere das Theme basierend auf den gespeicherten Einstellungen
-from core.config import ConfigManager
-config = ConfigManager()
-ThemeManager.set_theme(config.get_setting("ui", "theme"))
+# Initialisiere das Theme mit dem Standard "hell"
+ThemeManager.set_theme("hell")
+
+# Verzögerter Import - WICHTIG: Erst nach den Klassendefinitionen
+def initialize_theme_from_config():
+    try:
+        from core.config import ConfigManager
+        config = ConfigManager()
+        ThemeManager.set_theme(config.get_setting("ui", "theme"))
+    except ImportError:
+        print("Hinweis: Config konnte nicht importiert werden. Verwende Standard-Theme.")
+    except Exception as e:
+        print(f"Fehler bei Theme-Initialisierung: {e}")
 
 # Für Kompatibilität mit bestehenden Dateien
 # Diese Variablen werden von ThemeManager aktualisiert
@@ -93,3 +101,6 @@ SIDEBAR_ITEM_SELECTED = HIGHLIGHT_COLOR
 SIDEBAR_TEXT = TEXT_COLOR
 TEXT_PRIMARY = TEXT_COLOR
 PRIMARY = HIGHLIGHT_COLOR
+
+# Versuche am Ende der Datei, das Theme zu initialisieren
+initialize_theme_from_config()

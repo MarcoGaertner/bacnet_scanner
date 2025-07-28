@@ -1,0 +1,40 @@
+<RadioButton>:
+    size_hint_y: None
+    height: dp(60)
+    padding: dp(15)
+    spacing: dp(10)
+    
+    canvas.before:
+        Color:
+            rgba: root.bg_color
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(8)]
+    
+    BoxLayout:
+        size_hint: None, None
+        size: dp(24), dp(24)
+        pos_hint: {'center_y': 0.5}
+        
+        canvas.before:
+            Color:
+                rgba: [0.9, 0.9, 0.9, 1] if not root.selected else [0.2, 0.6, 0.9, 1]
+            Ellipse:
+                pos: self.pos
+                size: self.size
+            
+            # Innerer Kreis, wenn ausgewählt
+            Color:
+                rgba: [1, 1, 1, 1] if root.selected else [0, 0, 0, 0]
+            Ellipse:
+                pos: [self.pos[0] + dp(6), self.pos[1] + dp(6)]
+                size: [self.size[0] - dp(12), self.size[1] - dp(12)]
+    
+    Label:
+        text: root.text
+        color: root.text_color
+        font_size: dp(16)
+        text_size: self.size
+        halign: 'left'
+        valign: 'middle'

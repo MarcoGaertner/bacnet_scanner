@@ -10,14 +10,31 @@ class BaseScreen(Screen):
     
     def reload_theme(self):
         """Lädt das Theme neu"""
-        # Dies zwingt Kivy, die Canvas-Anweisungen mit den aktualisierten Farben neu zu zeichnen
+        # Aktualisiere die Canvas dieses Screens
         self.canvas.ask_update()
         
-        # Bei komplexen Screens können zusätzliche Aktualisierungen notwendig sein
-        for child in self.walk():
-            if hasattr(child, 'canvas'):
-                child.canvas.ask_update()
-
+        # Vollständige rekursive Canvas-Aktualisierung
+        def update_widget_canvases(widget):
+            if hasattr(widget, 'canvas'):
+                widget.canvas.ask_update()
+                
+                # Falls canvas.before oder canvas.after existieren
+                if hasattr(widget.canvas, 'before'):
+                    widget.canvas.before.flag_update()  # Verwende flag_update hier
+                if hasattr(widget.canvas, 'after'):
+                    widget.canvas.after.flag_update()  # Und hier auch
+            
+            # Theme-Farben in allen Komponenten aktualisieren
+            if hasattr(widget, 'update_colors'):
+                widget.update_colors()
+            
+            # Rekursiv für alle Kinder durchführen
+            for child in widget.children:
+                update_widget_canvases(child)
+        
+        # Starte die rekursive Aktualisierung
+        update_widget_canvases(self)
+        
     def reload_language(self):
         """Wird aufgerufen, wenn sich die Sprache ändert"""
         # Standard-Implementation, kann überschrieben werden

@@ -1,7 +1,12 @@
 {
     "ui": {
         "language": "deutsch",
-        "theme": "dunkel",
+        "theme": "hell",
         "units": "metrisch"
+    },
+    "user": {
+        "first_name": "",
+        "last_name": "",
+        "phone": ""
     }
 }

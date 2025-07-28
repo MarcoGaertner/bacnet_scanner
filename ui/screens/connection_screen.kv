@@ -1,4 +1,5 @@
 #:import colors ui.styles.colors
+#:import _ core.i18n.translator._
 
 <ConnectionScreen>:
     canvas.before:
@@ -8,17 +9,146 @@
             pos: self.pos
             size: self.size
     
+    # Verbindungstyp-Auswahlseite
     BoxLayout:
+        id: connection_type_screen
         orientation: 'vertical'
         padding: dp(20)
+        spacing: dp(15)
+        opacity: 1
+        
+        # Logo und Überschrift
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_y: None
+            height: dp(120)
+            
+            Image:
+                source: 'ui/assets/icons/connection_yel-logo.ico'
+                size_hint: None, None
+                size: dp(60), dp(60)
+                pos_hint: {'center_x': 0.5}
+            
+            Label:
+                text: _("connection.select_type")
+                font_size: dp(18)
+                color: colors.HIGHLIGHT_COLOR
+                halign: 'center'
+                size_hint_y: None
+                height: dp(40)
+        
+        # Verbindungsdiagramm
+        Image:
+            source: 'ui/assets/icons/connection_diagram.ico'
+            size_hint: None, None
+            size: dp(200), dp(120)
+            pos_hint: {'center_x': 0.5}
+        
+        # Verbindungsoptionen (Direkt hier, kein ScrollView)
+        BoxLayout:
+            id: connection_options
+            orientation: 'vertical'
+            size_hint_y: None # Wichtig, damit die Höhe von den Kindern bestimmt wird
+            height: self.minimum_height # Wird die Höhe seiner Kinder (RadioButtonGroup) übernehmen
+            spacing: dp(15)
+            padding: [0, dp(10), 0, 0]
+        
+        # Spacer
+        Widget:
+            size_hint_y: 1
+        
+        # Weiter-Button
+        Button:
+            text: _("connection.next")
+            size_hint_y: None
+            height: dp(50)
+            background_normal: ''
+            background_color: colors.HIGHLIGHT_COLOR
+            on_release: root.on_next_button_clicked()
+    
+    # Verbindungseinstellungen-Seite
+    BoxLayout:
+        id: connection_settings_screen
+        orientation: 'vertical'
+        padding: dp(20)
+        spacing: dp(15)
+        opacity: 0  # Anfangs ausgeblendet
+        disabled: self.opacity == 0
+        
+        # Logo
+        Image:
+            source: 'ui/assets/icons/connection_yel-logo.ico'
+            size_hint: None, None
+            size: dp(60), dp(60)
+            pos_hint: {'center_x': 0.5}
+        
+        # Überschriften
+        Label:
+            text: _("connection.network.title1")
+            font_size: dp(18)
+            color: colors.HIGHLIGHT_COLOR
+            halign: 'center'
+            size_hint_y: None
+            height: dp(30)
         
         Label:
-            text: "Verbindungs-Tab"
-            font_size: dp(24)
-            color: colors.TEXT_PRIMARY
+            text: _("connection.network.title2")
+            font_size: dp(16)
+            color: colors.HIGHLIGHT_COLOR
+            halign: 'center'
             size_hint_y: None
-            height: dp(40)
-            halign: 'left'
-            text_size: self.size
+            height: dp(30)
         
-        Widget:  # Platzhalter für späteren Inhalt
+        # Einstellungspanels
+        ScrollView: # Dieses ScrollView ist für die Einstellungs-Panels, nicht die Radio-Buttons
+            do_scroll_x: False
+            
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(15)
+                
+                # Netzwerk-Panel
+                ExpandablePanel:
+                    id: network_panel
+                    title: _("connection.network.adapter_title")
+                    is_expanded: True
+                
+                # Netzwerknummer-Panel
+                ExpandablePanel:
+                    id: network_number_panel
+                    title: _("connection.network.number_title")
+                
+                # UDP-Port-Panel
+                ExpandablePanel:
+                    id: udp_port_panel
+                    title: _("connection.network.port_title")
+                
+                # Foreign Device-Schalter
+                ToggleSwitch:
+                    id: foreign_device_switch
+                    text: _("connection.network.foreign_device")
+                
+                # Foreign Device-Panel
+                BoxLayout:
+                    id: foreign_device_panel
+                    orientation: 'vertical'
+                    size_hint_y: None
+                    height: 0  # Wird dynamisch angepasst
+                    opacity: 0
+                    disabled: True
+                    spacing: dp(10)
+        
+        # Spacer
+        Widget:
+            size_hint_y: 1
+        
+        # Weiter-Button
+        Button:
+            text: _("connection.next")
+            size_hint_y: None
+            height: dp(50)
+            background_normal: ''
+            background_color: colors.HIGHLIGHT_COLOR
+            on_release: root.on_next_button_clicked()

@@ -5,7 +5,15 @@
 BoxLayout:
     orientation: 'horizontal'
     
-    # Sidebar auf der linken Seite (vorher war sie nach dem AppScreenManager)
+    # Wichtig: Expliziter Hintergrund mit Theme-Farbe
+    canvas.before:
+        Color:
+            rgba: colors.ThemeColors.current["BACKGROUND"]  # Dynamische Themebindung
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    
+    # Sidebar auf der linken Seite
     Sidebar:
         id: sidebar
         screen_manager: screen_manager
@@ -13,3 +21,10 @@ BoxLayout:
     # Hauptinhaltbereich
     AppScreenManager:
         id: screen_manager
+        # Falls AppScreenManager keinen eigenen Hintergrund hat, füge hier einen hinzu:
+        canvas.before:
+            Color:
+                rgba: colors.ThemeColors.current["TAB_BACKGROUND"]  # oder eine andere passende Farbe
+            Rectangle:
+                pos: self.pos
+                size: self.size

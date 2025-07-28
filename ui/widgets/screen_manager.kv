@@ -1,2 +1,9 @@
 <AppScreenManager>:
     transition: NoTransition()
+    
+    canvas.before:
+        Color:
+            rgba: app.root.theme_colors.TAB_BACKGROUND if hasattr(app.root, 'theme_colors') else [0.9, 0.9, 0.9, 1]
+        Rectangle:
+            pos: self.pos
+            size: self.size

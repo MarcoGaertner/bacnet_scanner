@@ -7,6 +7,8 @@ from ui.styles.colors import ThemeManager
 from os.path import join, dirname, abspath
 import os
 from core.i18n.translator import Translator
+from kivy.clock import Clock
+from ui.styles.colors import ThemeColors
 
 
 ASSETS_DIR = join(dirname(abspath(__file__)), 'assets')
@@ -41,19 +43,40 @@ class BACnetScannerApp(App):
         theme = self.config_manager.get_setting("ui", "theme")
         ThemeManager.set_theme(theme)
         # Setze Fenster-Hintergrund entsprechend des Themes
-        from ui.styles.colors import ThemeColors
         Window.clearcolor = ThemeColors.current["BACKGROUND"]
     
     def on_theme_changed(self, instance, theme_name):
         """Wird aufgerufen, wenn sich das Theme ändert"""
-        # Aktualisiere die Fensterfarbe
-        from ui.styles.colors import ThemeColors
+        
+        # Fensterfarbe aktualisieren
         Window.clearcolor = ThemeColors.current["BACKGROUND"]
         
-        # Alle Screens neu laden
-        for screen in self.root.ids.screen_manager.screens:
-            screen.reload_theme()
-
+        def force_update_canvases(dt):
+            # Root-Widget und seinen gesamten Widget-Baum aktualisieren
+            if hasattr(self, 'root'):
+                # Root-Widget direkt aktualisieren
+                if hasattr(self.root, 'canvas'):
+                    self.root.canvas.ask_update()
+                    if hasattr(self.root.canvas, 'before'):
+                        self.root.canvas.before.flag_update()
+                
+                # Wichtigste Komponenten direkt ansprechen
+                if hasattr(self.root.ids, 'screen_manager'):
+                    self.root.ids.screen_manager.canvas.ask_update()
+                    if hasattr(self.root.ids.screen_manager.canvas, 'before'):
+                        self.root.ids.screen_manager.canvas.before.flag_update()
+                
+                if hasattr(self.root.ids, 'sidebar'):
+                    if hasattr(self.root.ids.sidebar, 'update_colors'):
+                        self.root.ids.sidebar.update_colors()
+                    self.root.ids.sidebar.canvas.ask_update()
+                
+                # Rekursive Aktualisierung für den Rest
+                self._recursive_update_canvas(self.root)
+                
+            # Rest des Codes wie bisher...
+        
+        Clock.schedule_once(force_update_canvases, 0)
 
     def on_language_changed(self, instance, language_code):
         """Wird aufgerufen, wenn sich die Sprache ändert"""
@@ -76,6 +99,31 @@ class BACnetScannerApp(App):
         except Exception as e:
             print(f"Fehler bei Windows-spezifischer Icon-Setzung: {e}")
 
-    current_language = Translator().current_language
-    print(f"Initialisiere UI-Übersetzungen mit Sprache: {current_language}")
-    event_bus.dispatch('on_language_changed', current_language)
+    def _recursive_update_canvas(self, widget):
+        """Rekursive Aktualisierung aller Canvas-Elemente"""
+        # Canvas dieses Widgets aktualisieren
+        if hasattr(widget, 'canvas'):
+            widget.canvas.ask_update()
+            
+        # Falls canvas.before oder canvas.after existieren
+        if hasattr(widget, 'canvas') and hasattr(widget.canvas, 'before'):
+            widget.canvas.before.flag_update()  # Verwende flag_update für canvas.before
+        if hasattr(widget, 'canvas') and hasattr(widget.canvas, 'after'):
+            widget.canvas.after.flag_update()  # Verwende flag_update für canvas.after
+        
+        # Rekursiv für alle Kinder durchführen
+        for child in widget.children:
+            self._recursive_update_canvas(child)
+
+
+
+    def update_theme(self):
+        """Aktualisiert das Theme des ScreenManagers"""
+        # Falls nötig, Canvas aktualisieren
+        self.canvas.ask_update()
+        if hasattr(self.canvas, 'before'):
+            self.canvas.before.flag_update()
+
+
+
+            
