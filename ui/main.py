@@ -9,6 +9,8 @@ import os
 from core.i18n.translator import Translator
 from kivy.clock import Clock
 from ui.styles.colors import ThemeColors
+from kivy.modules import inspector
+from kivy.core.window import Window
 
 
 ASSETS_DIR = join(dirname(abspath(__file__)), 'assets')
@@ -98,6 +100,7 @@ class BACnetScannerApp(App):
                 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
         except Exception as e:
             print(f"Fehler bei Windows-spezifischer Icon-Setzung: {e}")
+        inspector.create_inspector(Window, self.root)
 
     def _recursive_update_canvas(self, widget):
         """Rekursive Aktualisierung aller Canvas-Elemente"""

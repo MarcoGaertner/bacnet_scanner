@@ -33,6 +33,7 @@ class ConnectionScreen(BaseScreen):
         event_bus.bind(on_language_changed=self.on_language_changed)
         event_bus.bind(on_theme_changed=self.on_theme_changed)
 
+        # setup_ui nach dem vollständigen Laden und der Größenanpassung des Screens planen
         Clock.schedule_once(lambda dt: self.setup_ui(), 0)
 
         self.connection_type = self.config_manager.get_setting("connection", "type") or "network"
@@ -41,15 +42,21 @@ class ConnectionScreen(BaseScreen):
         self.screen_title = _("connection.title")
 
     def setup_ui(self, *args):
+        print(f"DEBUG: ConnectionScreen.setup_ui called. Current size: {self.size}, pos: {self.pos}")
         if hasattr(self.ids, 'connection_type_screen') and self.ids.connection_type_screen.opacity == 1:
             self._setup_connection_type_ui()
         else:
             self._setup_connection_settings_ui()
+        # Schedule a debug tree print after a short delay to allow layout to settle
+        Clock.schedule_once(lambda dt: self._debug_widget_tree(), 0.5)
 
     def _setup_connection_type_ui(self):
         """Richtet die UI für die Verbindungstyp-Auswahl ein"""
+        print("DEBUG: Setting up connection type UI using RadioButtonGroup")
+
         if hasattr(self.ids, 'connection_options'):
             options_container = self.ids.connection_options
+            print(f"DEBUG: options_container initial state - pos: {options_container.pos}, size: {options_container.size}, size_hint_y: {options_container.size_hint_y}, height: {options_container.height}")
             options_container.clear_widgets()
 
             options = [
@@ -60,22 +67,25 @@ class ConnectionScreen(BaseScreen):
                 _("connection.type.secure")
             ]
             selected_option_translated = self._get_translated_connection_type()
+            print(f"DEBUG: Options: {options}, Selected: {selected_option_translated}")
 
             self._radio_button_group_widget = RadioButtonGroup(
                 options=options,
                 selected=selected_option_translated,
                 group_name="connection_type_group",
-                on_selection_changed=self._on_connection_type_changed,
-                
-                # Farben für die Radio-Buttons (Text und SVG)
-                button_text_color=ThemeColors.current["TEXT_COLOR"],
-                button_svg_color=[0.7, 0.7, 0.7, 1], # Hellgrau für nicht ausgewählt
-                button_svg_selected_color=ThemeColors.current["HIGHLIGHT_COLOR"] # Highlight-Farbe für ausgewählt
+                on_selection_changed=self._on_connection_type_changed
             )
             options_container.add_widget(self._radio_button_group_widget)
+            print(f"DEBUG: RadioButtonGroup added to options_container. options_container children: {options_container.children}")
 
+            # Hinzugefügte Zeilen: Erzwingen einer Layout-Aktualisierung
+            # This is often not strictly necessary if size_hint_y is None and height is minimum_height,
+            # but it helps in debugging to see immediate effects.
             options_container.do_layout()
+            print(f"DEBUG: options_container.do_layout() called.")
             options_container.canvas.ask_update()
+            print(f"DEBUG: options_container.canvas.ask_update() called.")
+            print(f"DEBUG: options_container after do_layout - pos: {options_container.pos}, size: {options_container.size}, height: {options_container.height}")
 
     def _setup_connection_settings_ui(self):
         """Richtet die UI für die Verbindungseinstellungen ein"""
@@ -161,3 +171,33 @@ class ConnectionScreen(BaseScreen):
     def reload_theme(self):
         self.canvas.ask_update()
         self.setup_ui()
+
+    def _debug_widget_tree(self, widget=None, level=0):
+        """Rekursives Debugging des Widget-Baums (für Debug-Zwecke)"""
+        if widget is None:
+            widget = self
+            print("\n--- DEBUG: Widget Tree Analysis ---")
+        
+        indent = "  " * level
+        
+        # Limit depth for readability, but ensure key widgets are fully detailed
+        if level > 5 and not isinstance(widget, (RadioButtonGroup, SimpleRadioButton)):
+            # Only print basic info for deeper levels if not a target widget
+            print(f"{indent}Widget: {widget.__class__.__name__} (id: {widget.id if hasattr(widget, 'id') else 'None'}) ... (too deep)")
+            return
+
+        widget_info = (
+            f"Widget: {widget.__class__.__name__} (id: {widget.id if hasattr(widget, 'id') else 'None'}) "
+            f"pos: {widget.pos}, size: {widget.size}, "
+            f"size_hint: {widget.size_hint}, pos_hint: {widget.pos_hint}, "
+            f"opacity: {widget.opacity:.2f}, visible: {widget.opacity > 0}"
+        )
+        print(f"{indent}{widget_info}")
+
+        if hasattr(widget, 'children') and widget.children:
+            # Iterate through children in reverse order as Kivy adds them to the beginning of the list
+            for child in reversed(widget.children):
+                self._debug_widget_tree(child, level + 1)
+        
+        if level == 0:
+            print("--- END Widget Tree Analysis ---\n")

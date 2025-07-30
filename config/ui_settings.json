@@ -1,8 +1,8 @@
 {
     "ui": {
-        "language": "deutsch",
+        "language": "englisch",
         "theme": "hell",
-        "units": "metrisch"
+        "units": "imperial"
     },
     "user": {
         "first_name": "",

@@ -2,97 +2,132 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.properties import StringProperty, BooleanProperty, ObjectProperty, ListProperty
 from kivy.lang import Builder
 from kivy.uix.label import Label
-from kivy_garden.svg import Svg # <--- DIES IST DER KORREKTE IMPORT!
+from kivy.uix.image import Image # Importiere das Image Widget
+from kivy.graphics import Color, RoundedRectangle, Rectangle # Behalte diese für den Hintergrund des Buttons
 from kivy.metrics import dp
-from core.events import event_bus
-from ui.styles.colors import ThemeColors
+from core.events import event_bus # Annahme, dass dies eine gültige Importquelle ist
+from ui.styles.colors import ThemeColors # Annahme, dass dies eine gültige Importquelle ist
 from kivy.clock import Clock
 
+# KEINE KV-Datei laden, da SimpleRadioButton direkt in Python zeichnet.
+
 class SimpleRadioButton(BoxLayout):
-    """Einfacher Radio-Button mit SVG-Indikatoren."""
+    """Einfacher Radio-Button als direktes Widget"""
     text = StringProperty('')
     selected = BooleanProperty(False)
     group = StringProperty('default')
     callback = ObjectProperty(None)
-    
-    # Farben für Text und SVG-Indikator
-    text_color = ListProperty(ThemeColors.current["TEXT_COLOR"])
-    svg_color = ListProperty([0.7, 0.7, 0.7, 1]) # Standard: Hellgrau für nicht ausgewähltes SVG
-    svg_selected_color = ListProperty([0.2, 0.6, 0.9, 1]) # Standard: Blau für ausgewähltes SVG
 
     def __init__(self, **kwargs):
+        print(f"DEBUG: SimpleRadioButton.__init__ for text: '{kwargs.get('text', '')}'")
         super(SimpleRadioButton, self).__init__(**kwargs)
         self.orientation = 'horizontal'
         self.size_hint_y = None
-        self.height = dp(30) # Halbe Größe
+        self.height = dp(30) # Halbe Größe wie angefordert
         self.padding = [dp(15), 0]
         self.spacing = dp(10)
+        
+        with self.canvas.before:
+            Color(1, 0, 0, 0.5)  # halbtransparenter, roter Hintergrund
+            self._bg = Rectangle(pos=self.pos, size=self.size)
+        self.bind(pos=self._update_bg, size=self._update_bg)
 
-        # BoxLayout für den SVG-Indikator
-        self.svg_container = BoxLayout(
+        # Container für das Radio-Button-Bild (ersetzt den alten 'indicator' BoxLayout)
+        self.radio_image_container = BoxLayout(
             size_hint=(None, None),
-            size=(dp(20), dp(20)), # Größe für das SVG
+            size=(dp(20), dp(20)), # Größe für das Bild
             pos_hint={'center_y': 0.5}
         )
 
-        # SVG-Widget für die visuelle Darstellung des Radio-Buttons
-        self.radio_svg = Svg( # <--- Hier wird das Svg-Widget instanziiert
-            size_hint=(1, 1) # Füllt seinen übergeordneten Container (svg_container) aus
+        # Image-Widget für die visuelle Darstellung des Radio-Buttons
+        self.radio_image = Image( # <-- radio_image wird hier erstellt
+            size_hint=(1, 1) # Füllt seinen übergeordneten Container (radio_image_container) aus
         )
-        self.svg_container.add_widget(self.radio_svg)
+        self.radio_image_container.add_widget(self.radio_image)
 
         # Label für den Text
         self.label = Label(
             text=self.text,
-            color=self.text_color, # Textfarbe von Property
+            color=ThemeColors.current["TEXT_COLOR"],
             font_size=dp(14),
             halign='left',
             valign='middle',
-            size_hint_x=1,
+            size_hint_x=1, # Label nimmt den gesamten verfügbaren horizontalen Platz ein
             pos_hint={'center_y': 0.5}
         )
         self.label.bind(size=lambda instance, value: setattr(instance, 'text_size', value))
 
-        # Widgets hinzufügen
-        self.add_widget(self.svg_container)
+        # Füge den Bild-Container und das Label zum Haupt-BoxLayout hinzu
+        self.add_widget(self.radio_image_container)
         self.add_widget(self.label)
+        print(f"DEBUG: SimpleRadioButton.__init__ added radio_image_container and label. Children: {self.children}")
 
-        # Bindungen für die Aktualisierung des SVG und des Labels
-        self.bind(selected=self._update_svg_and_label_colors)
-        self.bind(text_color=self._update_svg_and_label_colors)
-        self.bind(svg_color=self._update_svg_and_label_colors)
-        self.bind(svg_selected_color=self._update_svg_and_label_colors)
+        # Binde für das Zeichnen des Hintergrunds (RoundedRectangle für den gesamten Button)
+        #self.bind(pos=self._draw_background, size=self._draw_background)
+        #Clock.schedule_once(self._draw_background, 0)
 
-        # Initiales Setzen der SVG-Quelle und Farben
-        self._update_svg_and_label_colors()
+        # Initiales Setzen der Bildquelle des Radio-Buttons
+        # Dieser Aufruf ist jetzt sicher, da radio_image oben initialisiert wurde.
+        self._update_radio_image()
+        print(f"DEBUG: SimpleRadioButton.__init__ finished for '{self.text}'")
 
-    def _update_svg_and_label_colors(self, *args):
-        """Aktualisiert die SVG-Quelle und die Farben basierend auf dem Auswahlstatus und den Properties."""
-        # Aktualisiere die SVG-Quelle
+    def _draw_background(self, *args):
+        """Zeichnet den RoundedRectangle-Hintergrund für den gesamten Button."""
+        # print(f"DEBUG: _draw_background called for '{self.text}'. Pos: {self.pos}, Size: {self.size}")
+        if not self.canvas or not self.canvas.before:
+            # print(f"  WARNING: Canvas not ready for '{self.text}' background. Skipping.")
+            return
+
+        self.canvas.before.clear()
+        with self.canvas.before:
+            bg_color = ThemeColors.current["CARD_BACKGROUND"]
+            # print(f"  Drawing background with color: {bg_color}, pos: (0,0), size: {self.size}")
+            Color(rgba=bg_color)
+            RoundedRectangle(pos=(0, 0), size=self.size, radius=[dp(8)])
+
+    def _update_radio_image(self):
+        """Aktualisiert die Quelle des Radio-Button-Bildes basierend auf dem Auswahlstatus."""
+        # print(f"DEBUG: _update_radio_image called for '{self.text}'. Selected: {self.selected}")
+        # Hinzufügen der Sicherheitsprüfung, ob radio_image bereits existiert
+        if not hasattr(self, 'radio_image'):
+            print(f"WARNING: radio_image not yet initialized for '{self.text}'. Skipping image update.")
+            return
+
         if self.selected:
-            self.radio_svg.source = 'ui/assets/icons/radio_selected.svg'
-            self.radio_svg.color = self.svg_selected_color # Setze die Farbe des ausgewählten SVG
+            self.radio_image.source = 'ui/assets/icons/radio.ico'
         else:
-            self.radio_svg.source = 'ui/assets/icons/radio_unselected.svg'
-            self.radio_svg.color = self.svg_color # Setze die Farbe des nicht ausgewählten SVG
-        
-        # Aktualisiere die Label-Farbe
-        self.label.color = self.text_color
+            self.radio_image.source = 'ui/assets/icons/radio-button.ico'
+        # Kivy's Image-Widget handhabt sein eigenes Rendering und Aktualisierungen, wenn sich die Quelle ändert.
+
+    def on_selected(self, *args):
+        print(f"DEBUG: on_selected called for '{self.text}'. Selected: {self.selected}")
+        # Dieser Aufruf ist jetzt sicher, da _update_radio_image eine Prüfung enthält.
+        self._update_radio_image()
 
     def on_touch_down(self, touch):
+        print(f"DEBUG: on_touch_down - Widget '{self.text}' - touch.pos: {touch.pos}, self.pos: {self.pos}, self.size: {self.size}")
+        print(f"DEBUG: collide_point? {self.collide_point(*touch.pos)}")
         if self.collide_point(*touch.pos):
+            print(f"DEBUG: Touch inside '{self.text}'! Selected-Status vorher: {self.selected}")
             if not self.selected:
                 if self.parent:
                     for child in self.parent.children:
                         if isinstance(child, SimpleRadioButton) and child.group == self.group and child != self:
                             child.selected = False
                 self.selected = True
+                print(f"DEBUG: Jetzt ausgewählt! '{self.text}'")
                 if self.callback:
                     self.callback(self.text)
+            else:
+                print(f"DEBUG: '{self.text}' war schon ausgewählt")
             return True
         return super(SimpleRadioButton, self).on_touch_down(touch)
+    
+    def _update_bg(self, *args):
+        self._bg.pos = self.pos
+        self._bg.size = self.size
 
-
+# RadioButtonGroup bleibt gleich, da es nur SimpleRadioButton-Instanzen verwaltet
 class RadioButtonGroup(BoxLayout):
     """Eine Gruppe von Radio-Buttons"""
     options = ListProperty([])
@@ -100,26 +135,19 @@ class RadioButtonGroup(BoxLayout):
     group_name = StringProperty('default')
     on_selection_changed = ObjectProperty(None)
 
-    # Farben für alle Buttons in dieser Gruppe
-    button_text_color = ListProperty(ThemeColors.current["TEXT_COLOR"])
-    button_svg_color = ListProperty([0.7, 0.7, 0.7, 1])
-    button_svg_selected_color = ListProperty([0.2, 0.6, 0.9, 1])
-
     def __init__(self, **kwargs):
+        print(f"DEBUG: RadioButtonGroup.__init__ for group: '{kwargs.get('group_name', '')}'")
         super(RadioButtonGroup, self).__init__(**kwargs)
         self.orientation = 'vertical'
         self.spacing = dp(10)
         self.size_hint_y = None
         self.bind(minimum_height=self.setter('height'))
         
-        # Wenn sich die Gruppenfarben ändern, müssen die Buttons neu initialisiert werden
-        self.bind(button_text_color=self._reinit_buttons,
-                  button_svg_color=self._reinit_buttons,
-                  button_svg_selected_color=self._reinit_buttons)
-
         Clock.schedule_once(self._init_buttons, 0.1)
+        print(f"DEBUG: RadioButtonGroup.__init__ scheduled _init_buttons.")
 
     def _init_buttons(self, dt):
+        print(f"DEBUG: RadioButtonGroup._init_buttons called. Options: {self.options}")
         self.clear_widgets()
         
         for option in self.options:
@@ -127,30 +155,25 @@ class RadioButtonGroup(BoxLayout):
                 text=option,
                 selected=option == self.selected,
                 group=self.group_name,
-                callback=self._on_button_selected,
-                # Farben an die SimpleRadioButton-Instanz übergeben
-                text_color=self.button_text_color,
-                svg_color=self.button_svg_color,
-                svg_selected_color=self.button_svg_selected_color
+                callback=self._on_button_selected
             )
             self.add_widget(rb)
-
-    def _reinit_buttons(self, *args):
-        """Wird aufgerufen, wenn sich die Farben der Gruppe ändern, um die Buttons neu zu erstellen."""
-        Clock.schedule_once(self._init_buttons, 0.1)
+            print(f"DEBUG:   Added SimpleRadioButton '{option}'. Current rb.pos: {rb.pos}, rb.size: {rb.size}")
+        print(f"DEBUG: RadioButtonGroup._init_buttons finished. Children count: {len(self.children)}")
+        print(f"DEBUG: RadioButtonGroup final height: {self.height}, minimum_height: {self.minimum_height}")
 
     def _on_button_selected(self, value):
-        """Wird aufgerufen, wenn ein Button in der Gruppe ausgewählt wird."""
+        print(f"DEBUG: RadioButtonGroup._on_button_selected: '{value}'")
         self.selected = value
         if self.on_selection_changed:
             self.on_selection_changed(value)
 
     def on_options(self, instance, value):
-        """Reagiert auf Änderungen der options-Property."""
+        print(f"DEBUG: RadioButtonGroup.on_options called. New options: {value}")
         Clock.schedule_once(self._init_buttons, 0.1)
 
     def on_selected(self, instance, value):
-        """Reagiert auf Änderungen der selected-Property."""
+        print(f"DEBUG: RadioButtonGroup.on_selected called. New selected: '{value}'")
         for child in self.children:
             if isinstance(child, SimpleRadioButton):
                 child.selected = (child.text == value)
