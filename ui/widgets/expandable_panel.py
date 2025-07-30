@@ -21,7 +21,13 @@ class ExpandablePanel(BoxLayout):
     panel_spacing = NumericProperty(5)
 
     def __init__(self, **kwargs):
-        initial_expanded = kwargs.pop('initial_expanded', False)
+        # Unterstützung für verschiedene Parameter für den Expansionszustand
+        # Prüfe und verarbeite die verschiedenen möglichen Parameter
+        if 'expanded' in kwargs:
+            self.is_expanded = kwargs.pop('expanded')
+        elif 'initial_expanded' in kwargs:
+            self.is_expanded = kwargs.pop('initial_expanded')
+        
         super(ExpandablePanel, self).__init__(**kwargs)
         self.update_colors()
         event_bus.bind(on_theme_changed=self.on_theme_changed)
@@ -74,24 +80,50 @@ class ExpandablePanel(BoxLayout):
         if hasattr(self, 'ids') and 'content' in self.ids:
             # Setze Eigenschaften direkt
             content = self.ids.content
-            content.opacity = 1 if expanded else 0
-            content.disabled = not expanded
+            
+            # Berechne die alte Höhe für die Differenz
+            old_height = self.height
             
             if expanded:
-                # Wenn das Panel geöffnet wird, setze die Höhe auf minimum_height
+                # Wenn das Panel geöffnet wird
+                content.opacity = 1
+                content.disabled = False
+                
+                # Setze die Höhe auf minimum_height
                 content.height = content.minimum_height
+                
                 # Gesamthöhe des Panels = Header + Spacing + Content
                 self.height = self.header_height + self.panel_spacing + content.height
             else:
-                # Wenn das Panel geschlossen wird, setze die Höhe auf 0
+                # Wenn das Panel geschlossen wird
+                content.opacity = 0
+                content.disabled = True
                 content.height = 0
-                # Gesamthöhe des Panels = nur Header (kein Spacing, kein Content)
+                
+                # Gesamthöhe des Panels = nur Header
                 self.height = self.header_height
+            
+            # Berechne die Höhendifferenz
+            height_diff = self.height - old_height
             
             # Benachrichtige den Container, dass sich die Größe geändert hat
             if self.parent:
-                self.parent.size_hint_min_y = None
-                self.parent.height = self.parent.minimum_height
+                # Aktualisiere die Höhe des übergeordneten Containers
+                if hasattr(self.parent, 'minimum_height'):
+                    self.parent.height = self.parent.minimum_height
+                
+                # Verschiebe alle nachfolgenden Widgets nach unten/oben
+                if height_diff != 0:
+                    # Finde die Position dieses Panels in der Liste der Kinder
+                    try:
+                        index = self.parent.children.index(self)
+                        # Widgets in Kivy sind in umgekehrter Reihenfolge (von unten nach oben)
+                        # Daher müssen wir nur die Widgets mit niedrigerem Index verschieben
+                        for i in range(index):
+                            child = self.parent.children[i]
+                            child.y -= height_diff
+                    except ValueError:
+                        pass
                 
                 # Scrollview-Aktualisierung (wenn vorhanden)
                 if hasattr(self.parent, 'parent') and self.parent.parent:
@@ -112,3 +144,10 @@ class ExpandablePanel(BoxLayout):
             return True
             
         return super(ExpandablePanel, self).on_touch_down(touch)
+
+    def add_content(self, widget):
+        """Fügt ein Widget zum Inhalt des Panels hinzu"""
+        if hasattr(self, 'ids') and 'content' in self.ids:
+            self.ids.content.add_widget(widget)
+            # Aktualisiere die Höhe des Panels
+            Clock.schedule_once(lambda dt: self._update_panel_state(self.is_expanded), 0)

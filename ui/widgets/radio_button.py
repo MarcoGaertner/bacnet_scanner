@@ -26,11 +26,6 @@ class SimpleRadioButton(BoxLayout):
         self.height = dp(30) # Halbe Größe wie angefordert
         self.padding = [dp(15), 0]
         self.spacing = dp(10)
-        
-        with self.canvas.before:
-            Color(1, 0, 0, 0.5)  # halbtransparenter, roter Hintergrund
-            self._bg = Rectangle(pos=self.pos, size=self.size)
-        self.bind(pos=self._update_bg, size=self._update_bg)
 
         # Container für das Radio-Button-Bild (ersetzt den alten 'indicator' BoxLayout)
         self.radio_image_container = BoxLayout(

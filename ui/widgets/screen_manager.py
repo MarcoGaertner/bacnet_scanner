@@ -4,6 +4,11 @@ from core.events import event_bus  # Wichtig: EventBus importieren
 
 # Screen-Klassen importieren
 from ui.screens.connection_screen import ConnectionScreen
+from ui.screens.device_ap_screen import DeviceAPScreen
+from ui.screens.network_screen import NetworkScreen
+from ui.screens.mstp_screen import MSTPScreen
+from ui.screens.usb_screen import USBScreen
+from ui.screens.secure_connect_screen import SecureConnectScreen
 from ui.screens.devices_screen import DevicesScreen
 from ui.screens.account_screen import AccountScreen
 from ui.screens.settings_screen import SettingsScreen
@@ -42,6 +47,11 @@ class AppScreenManager(ScreenManager):
         self.add_widget(TrendScreen(name='online_trend'))
         self.add_widget(HelpScreen(name='hilfe'))
         self.add_widget(InfoScreen(name='info'))
+        self.add_widget(DeviceAPScreen(name='device_ap'))
+        self.add_widget(NetworkScreen(name='network'))
+        self.add_widget(MSTPScreen(name='mstp'))
+        self.add_widget(USBScreen(name='usb'))
+        self.add_widget(SecureConnectScreen(name='secure'))
         
         # Reagiere auf Sprachänderungen
         event_bus.bind(on_language_changed=self.on_language_changed)

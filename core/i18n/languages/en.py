@@ -64,5 +64,55 @@ translations = {
     "connection.network.foreign_device": "Foreign Device (Advanced)",
     "connection.network.bbmd_ip": "BBMD IP Address",
     "connection.network.bbmd_port": "BBMD UDP Port",
-    "connection.network.bbmd_network": "BBMD Network Number (Optional)"
+    "connection.network.bbmd_network": "BBMD Network Number (Optional)",
+
+    # Verbindungstyp-Screens
+    "connection.back": "Back",
+    "connection.next": "Next",
+
+    # Device AP Screen
+    "connection.device_ap.title": "Device AP Connection",
+    "connection.device_ap.description": "Connect directly to a BACnet device using its access point.",
+    "connection.device_ap.device_address": "Device Address",
+    "connection.device_ap.device_address_hint": "Enter device IP address",
+
+    # Network Screen
+    "connection.network.title": "Network Connection",
+    "connection.network.select_network": "Select Network",
+    "connection.network.advanced_settings": "Advanced Connection Settings",
+    "connection.network.network": "Network",
+    "connection.network.adapter": "Network Adapter",
+    "connection.network.ip_address": "IP Address:",
+    "connection.network.network_number": "Network Number (Optional)",
+    "connection.network.network_number_hint": "Enter network number",
+    "connection.network.udp_port": "UDP Port (Optional)",
+    "connection.network.port": "Port",
+    "connection.network.foreign_device": "Register as Foreign Device",
+    "connection.network.bbmd_ip": "BBMD IP Address",
+    "connection.network.bbmd_port": "BBMD UDP Port",
+    "connection.network.bbmd_network": "BBMD Network Number (Optional)",
+
+    # MS/TP Screen
+    "connection.mstp.title": "MS/TP Connection",
+    "connection.mstp.description": "Connect to a BACnet MS/TP network via a serial port.",
+    "connection.mstp.com_port": "COM Port",
+    "connection.mstp.port": "Port",
+    "connection.mstp.baud_rate": "Baud Rate",
+    "connection.mstp.mac_address": "MAC Address",
+    "connection.mstp.mac_address_hint": "Enter MAC address (0-127)",
+
+    # USB Screen
+    "connection.usb.title": "USB Connection",
+    "connection.usb.description": "Connect to a BACnet device via USB.",
+    "connection.usb.device": "USB Device",
+    "connection.usb.select_device": "Select USB Device",
+
+    # Secure Connect Screen
+    "connection.secure.title": "BACnet Secure Connect",
+    "connection.secure.description": "Connect to a BACnet/SC network using secure WebSocket.",
+    "connection.secure.server_url": "Server URL",
+    "connection.secure.server_url_hint": "Enter server URL (ws:// or wss://)",
+    "connection.secure.certificate": "Client Certificate",
+    "connection.secure.select_certificate": "Select Certificate",
+    "connection.secure.no_certificate": "No Certificate (Anonymous)"
 }
