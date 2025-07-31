@@ -1,0 +1,113 @@
+
+
+MACAddress=
+Name=Microsoft Kernel Debug Network Adapter
+NetConnectionStatus=
+
+
+MACAddress=A8:B1:3B:AC:25:EE
+Name=Intel(R) Ethernet Connection (14) I219-LM
+NetConnectionStatus=7
+
+
+MACAddress=88:D8:2E:FD:39:B9
+Name=Intel(R) Wi-Fi 6 AX201 160MHz
+NetConnectionStatus=2
+
+
+MACAddress=B4:97:8C:45:5E:51
+Name=Generic Mobile Broadband Adapter
+NetConnectionStatus=7
+
+
+MACAddress=88:D8:2E:FD:39:BD
+Name=Bluetooth Device (Personal Area Network)
+NetConnectionStatus=7
+
+
+MACAddress=88:D8:2E:FD:39:BA
+Name=Microsoft Wi-Fi Direct Virtual Adapter
+NetConnectionStatus=
+
+
+MACAddress=8A:D8:2E:FD:39:B9
+Name=Microsoft Wi-Fi Direct Virtual Adapter #2
+NetConnectionStatus=
+
+
+MACAddress=
+Name=WAN Miniport (SSTP)
+NetConnectionStatus=
+
+
+MACAddress=
+Name=WAN Miniport (IKEv2)
+NetConnectionStatus=
+
+
+MACAddress=
+Name=WAN Miniport (L2TP)
+NetConnectionStatus=
+
+
+MACAddress=
+Name=WAN Miniport (PPTP)
+NetConnectionStatus=
+
+
+MACAddress=
+Name=WAN Miniport (PPPOE)
+NetConnectionStatus=
+
+
+MACAddress=CC:27:20:52:41:53
+Name=WAN Miniport (IP)
+NetConnectionStatus=
+
+
+MACAddress=D2:23:20:52:41:53
+Name=WAN Miniport (IPv6)
+NetConnectionStatus=
+
+
+MACAddress=D6:01:20:52:41:53
+Name=WAN Miniport (Network Monitor)
+NetConnectionStatus=
+
+
+MACAddress=00:50:56:C0:00:01
+Name=VMware Virtual Ethernet Adapter for VMnet1
+NetConnectionStatus=2
+
+
+MACAddress=00:50:56:C0:00:08
+Name=VMware Virtual Ethernet Adapter for VMnet8
+NetConnectionStatus=2
+
+
+MACAddress=
+Name=Lenovo USB Ethernet
+NetConnectionStatus=
+
+
+MACAddress=
+Name=Realtek USB GbE Family Controller
+NetConnectionStatus=
+
+
+MACAddress=A8:B1:3B:AC:25:EE
+Name=Realtek USB GbE Family Controller #3
+NetConnectionStatus=7
+
+
+MACAddress=
+Name=Realtek USB GbE Family Controller
+NetConnectionStatus=
+
+
+MACAddress=
+Name=Realtek USB GbE Family Controller
+NetConnectionStatus=
+
+
+

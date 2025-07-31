@@ -1,0 +1,112 @@
+[
+  {
+    "name": "WLAN",
+    "status": "Verbunden",
+    "type": "WLAN",
+    "mac_address": "88-D8-2E-FD-39-B9",
+    "ip_address": "172.16.13.175",
+    "subnet_mask": "255.255.255.0",
+    "default_gateway": "172.16.13.254",
+    "preferred_dns": "",
+    "alternate_dns": ""
+  },
+  {
+    "name": "localhost",
+    "status": "Verbunden",
+    "type": "Loopback",
+    "mac_address": "",
+    "ip_address": "127.0.0.1",
+    "subnet_mask": "255.0.0.0",
+    "default_gateway": "",
+    "preferred_dns": "",
+    "alternate_dns": ""
+  },
+  {
+    "name": "Ethernet",
+    "status": "Nicht verbunden",
+    "type": "Ethernet",
+    "mac_address": "A8-B1-3B-AC-25-EE",
+    "ip_address": "",
+    "subnet_mask": "",
+    "default_gateway": "",
+    "preferred_dns": "",
+    "alternate_dns": ""
+  },
+  {
+    "name": "Ethernet 5",
+    "status": "Nicht verbunden",
+    "type": "Ethernet",
+    "mac_address": "A8-B1-3B-AC-25-EE",
+    "ip_address": "",
+    "subnet_mask": "",
+    "default_gateway": "",
+    "preferred_dns": "",
+    "alternate_dns": ""
+  },
+  {
+    "name": "LAN-Verbindung* 1",
+    "status": "Nicht verbunden",
+    "type": "Unbekannt",
+    "mac_address": "88-D8-2E-FD-39-BA",
+    "ip_address": "",
+    "subnet_mask": "",
+    "default_gateway": "",
+    "preferred_dns": "",
+    "alternate_dns": ""
+  },
+  {
+    "name": "LAN-Verbindung* 2",
+    "status": "Nicht verbunden",
+    "type": "Unbekannt",
+    "mac_address": "8A-D8-2E-FD-39-B9",
+    "ip_address": "",
+    "subnet_mask": "",
+    "default_gateway": "",
+    "preferred_dns": "",
+    "alternate_dns": ""
+  },
+  {
+    "name": "Mobilfunk",
+    "status": "Nicht verbunden",
+    "type": "Mobilfunk",
+    "mac_address": "B4-97-8C-45-5E-51",
+    "ip_address": "",
+    "subnet_mask": "",
+    "default_gateway": "",
+    "preferred_dns": "",
+    "alternate_dns": ""
+  },
+  {
+    "name": "VMware Network Adapter VMnet1",
+    "status": "Nicht verbunden",
+    "type": "Virtuell",
+    "mac_address": "",
+    "ip_address": "",
+    "subnet_mask": "",
+    "default_gateway": "",
+    "preferred_dns": "",
+    "alternate_dns": ""
+  },
+  {
+    "name": "VMware Network Adapter VMnet8",
+    "status": "Nicht verbunden",
+    "type": "Virtuell",
+    "mac_address": "",
+    "ip_address": "",
+    "subnet_mask": "",
+    "default_gateway": "",
+    "preferred_dns": "",
+    "alternate_dns": ""
+  },
+  {
+    "name": "Bluetooth-Netzwerkverbindung",
+    "status": "Nicht verbunden",
+    "type": "Bluetooth",
+    "mac_address": "88-D8-2E-FD-39-BD",
+    "ip_address": "",
+    "subnet_mask": "",
+    "default_gateway": "",
+    "preferred_dns": "",
+    "alternate_dns": ""
+  }
+]

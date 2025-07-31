@@ -1,15 +1,19 @@
+import json
+import os
+from pathlib import Path
+
 from ui.screens.connection_type_base_screen import ConnectionTypeBaseScreen
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
-from kivy.uix.textinput import TextInput
-from kivy.properties import StringProperty
+from kivy.properties import StringProperty, ObjectProperty
 from kivy.metrics import dp
 from kivy.lang import Builder
 from core.i18n.translator import _
 from ui.styles.colors import ThemeColors
 from ui.widgets.expandable_panel import ExpandablePanel
-from ui.widgets.dropdown import NestedDropdown
+from ui.widgets.dropdown_scrollbar import ScrollableNestedDropdown
 from ui.widgets.toggle_switch import ToggleSwitch
+from ui.widgets.hint_text_input import HintTextInput
 from kivy.app import App
 from kivy.clock import Clock
 
@@ -20,228 +24,225 @@ class NetworkScreen(ConnectionTypeBaseScreen):
     """Screen für BACnet Netzwerk Verbindungseinstellungen"""
     screen_title = StringProperty("")
     connection_type = "network"
+    ip_label = ObjectProperty(None)
+    
+    def __init__(self, **kwargs):
+        super(NetworkScreen, self).__init__(**kwargs)
+        # Lade die Netzwerkadapter beim Initialisieren
+        self.network_adapters = self.load_network_adapters()
     
     def update_translations(self):
         """Aktualisiert die Übersetzungen"""
         self.screen_title = _("connection.network.title")
     
+    def load_network_adapters(self):
+        """Lädt die Netzwerkadapter aus der JSON-Datei"""
+        try:
+            # Pfad zur JSON-Datei im config-Ordner bestimmen
+            base_dir = Path(os.path.dirname(os.path.abspath(__file__))).parent.parent
+            config_dir = base_dir / "config"
+            adapter_file = config_dir / "network_adapters.json"
+            
+            # Wenn die Datei existiert, lade sie
+            if adapter_file.exists():
+                with open(adapter_file, 'r', encoding='utf-8') as f:
+                    adapters = json.load(f)
+                print(f"INFO: {len(adapters)} Netzwerkadapter geladen")
+                return adapters
+            else:
+                print(f"WARNUNG: Netzwerkadapter-Datei nicht gefunden: {adapter_file}")
+                return []
+        except Exception as e:
+            print(f"FEHLER: Konnte Netzwerkadapter nicht laden: {e}")
+            return []
+
+    def _load_bacnet_ports(self):
+        """Lädt BACnet-Port-Optionen aus der Konfigurationsdatei."""
+        try:
+            current_dir = os.path.dirname(__file__)
+            project_root = os.path.join(current_dir, '..', '..')
+            config_path = os.path.join(project_root, 'config', 'bacnet_ports.json')
+            config_path = os.path.abspath(config_path)
+
+            with open(config_path, 'r') as f:
+                ports_data = json.load(f)
+            
+            return [item['display_text'] for item in ports_data]
+        except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
+            print(f"FEHLER: Konnte bacnet_ports.json nicht laden oder verarbeiten: {e}")
+            return ["BAC0 (47808)", "BAC1 (47809)", "BAC2 (47810)", "BAC3 (47811)"]
+    
     def create_specific_content(self):
         """Erstellt den spezifischen Inhalt für den Netzwerk Verbindungstyp"""
+        print("DEBUG: 1. Starte create_specific_content")
+        
         # Hauptcontainer für den gesamten Inhalt
         main_container = BoxLayout(orientation='vertical', spacing=dp(15), size_hint_y=None)
         main_container.bind(minimum_height=main_container.setter('height'))
+        print("DEBUG: 2. main_container erstellt")
         
         # Überschriften
-        step1_label = Label(
-            text="1. " + _("connection.network.select_network"),
-            color=ThemeColors.current["TEXT_COLOR"],
-            font_size=dp(16),
-            size_hint_y=None,
-            height=dp(30),
-            halign='left',
-            valign='middle'
-        )
+        step1_label = Label(text="1. " + _("connection.network.select_network"), color=ThemeColors.current["TEXT_COLOR"], font_size=dp(16), size_hint_y=None, height=dp(30), halign='left', valign='middle')
         step1_label.bind(size=lambda instance, value: setattr(instance, 'text_size', value))
+        print("DEBUG: 3. step1_label erstellt")
         
-        step2_label = Label(
-            text="2. " + _("connection.network.advanced_settings"),
-            color=ThemeColors.current["TEXT_COLOR"],
-            font_size=dp(16),
-            size_hint_y=None,
-            height=dp(30),
-            halign='left',
-            valign='middle'
-        )
+        step2_label = Label(text="2. " + _("connection.network.advanced_settings"), color=ThemeColors.current["TEXT_COLOR"], font_size=dp(16), size_hint_y=None, height=dp(30), halign='left', valign='middle')
         step2_label.bind(size=lambda instance, value: setattr(instance, 'text_size', value))
+        print("DEBUG: 4. step2_label erstellt")
         
         # Netzwerk Panel
-        network_panel = ExpandablePanel(
-            title=_("connection.network.network"),
-            is_expanded=False,
-            size_hint_y=None
-        )
-        
+        network_panel = ExpandablePanel(title=_("connection.network.network"), is_expanded=False, size_hint_y=None)
         network_layout = BoxLayout(orientation='vertical', spacing=dp(10), padding=[dp(20), dp(10), dp(20), dp(10)], size_hint_y=None)
         network_layout.bind(minimum_height=network_layout.setter('height'))
         
-        # Netzwerkadapter Dropdown
-        self.adapter_dropdown = NestedDropdown(
-            title=_("connection.network.adapter"),
-            options=["Ethernet", "Wi-Fi", "VPN"],
-            current_value="Ethernet",
-            size_hint_y=None,
+        # Adapter-Optionen aus der geladenen JSON-Datei extrahieren
+        adapter_options = [adapter["name"] for adapter in self.network_adapters] if self.network_adapters else ["Ethernet"]
+        
+        # Wenn keine Adapter gefunden wurden, Standard-Optionen verwenden
+        if not adapter_options:
+            adapter_options = ["Ethernet", "Wi-Fi", "VPN"]
+            
+        # Dropdown für Netzwerkadapter
+        self.adapter_dropdown = ScrollableNestedDropdown(
+            title=_("connection.network.adapter"), 
+            options=adapter_options, 
+            current_value=adapter_options[0] if adapter_options else "", 
+            size_hint_y=None, 
             height=dp(50)
         )
         
-        # IP-Adresse Label
-        ip_layout = BoxLayout(orientation='horizontal', size_hint_y=None, height=dp(30))
+        # Event-Handler für die Auswahl eines Adapters
+        def on_adapter_selected(value):
+            print(f"DEBUG: Adapter '{value}' ausgewählt")
+            # IP-Adresse des ausgewählten Adapters aktualisieren
+            self.update_ip_address(value)
         
+        self.adapter_dropdown.on_select = on_adapter_selected
+        
+        # Layout für IP-Adresse
+        ip_layout = BoxLayout(orientation='horizontal', size_hint_y=None, height=dp(30))
         ip_label_left = Label(
-            text=_("connection.network.ip_address"),
-            color=ThemeColors.current["TEXT_COLOR"],
-            size_hint_x=0.4,
-            halign='left',
+            text=_("connection.network.ip_address"), 
+            color=ThemeColors.current["TEXT_COLOR"], 
+            size_hint_x=0.4, 
+            halign='left', 
             valign='middle'
         )
         ip_label_left.bind(size=lambda instance, value: setattr(instance, 'text_size', value))
         
-        ip_label_right = Label(
-            text="192.168.1.100",
-            color=ThemeColors.current["HIGHLIGHT_COLOR"],
-            size_hint_x=0.6,
-            halign='left',
+        # Label für die IP-Adresse (wird dynamisch aktualisiert)
+        self.ip_label = Label(
+            text="", 
+            color=ThemeColors.current["HIGHLIGHT_COLOR"], 
+            size_hint_x=0.6, 
+            halign='left', 
             valign='middle'
         )
-        ip_label_right.bind(size=lambda instance, value: setattr(instance, 'text_size', value))
+        self.ip_label.bind(size=lambda instance, value: setattr(instance, 'text_size', value))
         
         ip_layout.add_widget(ip_label_left)
-        ip_layout.add_widget(ip_label_right)
+        ip_layout.add_widget(self.ip_label)
         
         network_layout.add_widget(self.adapter_dropdown)
         network_layout.add_widget(ip_layout)
-        
         network_panel.add_content(network_layout)
+        print("DEBUG: 5. network_panel erstellt")
+
+        # Initiale IP-Adresse setzen
+        Clock.schedule_once(lambda dt: self.update_ip_address(self.adapter_dropdown.current_value), 0.1)
         
         # Netzwerknummer Panel
-        network_number_panel = ExpandablePanel(
-            title=_("connection.network.network_number"),
-            is_expanded=False,
-            size_hint_y=None
-        )
-        
+        network_number_panel = ExpandablePanel(title=_("connection.network.network_number"), is_expanded=False, size_hint_y=None)
         network_number_layout = BoxLayout(orientation='vertical', spacing=dp(10), padding=[dp(20), dp(10), dp(20), dp(10)], size_hint_y=None)
         network_number_layout.bind(minimum_height=network_number_layout.setter('height'))
         
-        self.network_number_input = TextInput(
-            hint_text=_("connection.network.network_number_hint"),
-            multiline=False,
-            input_filter='int',
-            size_hint_y=None,
+        # HintTextInput statt TextInput verwenden
+        self.network_number_input = HintTextInput(
+            hint_text=_("connection.network.network_number_hint"), 
+            multiline=False, 
+            input_filter='int', 
+            size_hint_y=None, 
             height=dp(40)
         )
         
         network_number_layout.add_widget(self.network_number_input)
         network_number_panel.add_content(network_number_layout)
-        
+        print("DEBUG: 6. network_number_panel erstellt")
+
         # UDP Port Panel
-        udp_port_panel = ExpandablePanel(
-            title=_("connection.network.udp_port"),
-            is_expanded=False,
-            size_hint_y=None
-        )
-        
+        udp_port_panel = ExpandablePanel(title=_("connection.network.udp_port"), is_expanded=False, size_hint_y=None)
         udp_port_layout = BoxLayout(orientation='vertical', spacing=dp(10), padding=[dp(20), dp(10), dp(20), dp(10)], size_hint_y=None)
         udp_port_layout.bind(minimum_height=udp_port_layout.setter('height'))
         
-        self.udp_port_dropdown = NestedDropdown(
-            title=_("connection.network.port"),
-            options=["BAC0 (47808)", "BAC1 (47809)", "BAC2 (47810)", "BAC3 (47811)"],
-            current_value="BAC0 (47808)",
-            size_hint_y=None,
-            height=dp(50)
-        )
+        udp_port_options = self._load_bacnet_ports()
+        
+        self.udp_port_dropdown = ScrollableNestedDropdown(title=_("connection.network.port"), options=udp_port_options, current_value=udp_port_options[0] if udp_port_options else "", size_hint_y=None, height=dp(50))
         
         udp_port_layout.add_widget(self.udp_port_dropdown)
         udp_port_panel.add_content(udp_port_layout)
-        
+        print("DEBUG: 7. udp_port_panel erstellt")
+
         # Foreign Device Panel mit Toggle Switch
         foreign_device_layout = BoxLayout(orientation='horizontal', size_hint_y=None, height=dp(50), padding=[0, 0, dp(10), 0])
-        
-        foreign_device_label = Label(
-            text=_("connection.network.foreign_device"),
-            color=ThemeColors.current["TEXT_COLOR"],
-            size_hint_x=0.855,
-            halign='left',
-            valign='middle'
-        )
+        foreign_device_label = Label(text=_("connection.network.foreign_device"), color=ThemeColors.current["TEXT_COLOR"], size_hint_x=0.855, halign='left', valign='middle')
         foreign_device_label.bind(size=lambda instance, value: setattr(instance, 'text_size', value))
-        
-        # Container für den Toggle Switch, um sicherzustellen, dass er vollständig sichtbar ist
         switch_container = BoxLayout(size_hint_x=0.145, padding=[0, 0, 0, 0])
-        
-        # Toggle Switch
-        self.foreign_device_switch = ToggleSwitch(
-            active=False,
-            size_hint=(None, None),
-            size=(dp(50), dp(30)),
-            pos_hint={'center_y': 0.5, 'center_x': 0.5}  # Zentriert im Container
-        )
-        
+        self.foreign_device_switch = ToggleSwitch(active=False, size_hint=(None, None), size=(dp(50), dp(30)), pos_hint={'center_y': 0.5, 'center_x': 0.5})
         switch_container.add_widget(self.foreign_device_switch)
         foreign_device_layout.add_widget(foreign_device_label)
         foreign_device_layout.add_widget(switch_container)
-        
+        print("DEBUG: 8. foreign_device_layout erstellt")
+
         # Foreign Device Panel Inhalt
-        self.foreign_device_panel = BoxLayout(
-            orientation='vertical',
-            spacing=dp(10),
-            size_hint_y=None,
-            height=dp(0),
-            opacity=0,
-            padding=[dp(10), 0, dp(10), dp(10)]  # Padding hinzufügen, um Rand einzuhalten
-        )
+        self.foreign_device_panel = BoxLayout(orientation='vertical', spacing=dp(10), size_hint_y=None, height=dp(0), opacity=0, padding=[dp(10), 0, dp(10), dp(10)])
         self.foreign_device_panel.bind(minimum_height=self.foreign_device_panel.setter('height'))
         
-        self.bbmd_ip_input = TextInput(
-            hint_text=_("connection.network.bbmd_ip"),
-            multiline=False,
-            size_hint_y=None,
+        # HintTextInput statt TextInput verwenden
+        self.bbmd_ip_input = HintTextInput(
+            hint_text=_("connection.network.bbmd_ip"), 
+            multiline=False, 
+            size_hint_y=None, 
             height=dp(40)
         )
         
-        self.bbmd_port_dropdown = NestedDropdown(
-            title=_("connection.network.bbmd_port"),
-            options=["BAC0 (47808)", "BAC1 (47809)", "BAC2 (47810)", "BAC3 (47811)"],
-            current_value="BAC0 (47808)",
-            size_hint_y=None,
-            height=dp(50)
-        )
+        bbmd_port_options = self._load_bacnet_ports() # Auch hier die Ports laden
+        self.bbmd_port_dropdown = ScrollableNestedDropdown(title=_("connection.network.bbmd_port"), options=bbmd_port_options, current_value=bbmd_port_options[0] if bbmd_port_options else "", size_hint_y=None, height=dp(50))
         
-        self.bbmd_network_input = TextInput(
-            hint_text=_("connection.network.bbmd_network"),
-            multiline=False,
-            input_filter='int',
-            size_hint_y=None,
+        # HintTextInput statt TextInput verwenden
+        self.bbmd_network_input = HintTextInput(
+            hint_text=_("connection.network.bbmd_network"), 
+            multiline=False, 
+            input_filter='int', 
+            size_hint_y=None, 
             height=dp(40)
         )
         
         self.foreign_device_panel.add_widget(self.bbmd_ip_input)
         self.foreign_device_panel.add_widget(self.bbmd_port_dropdown)
         self.foreign_device_panel.add_widget(self.bbmd_network_input)
-        
+        print("DEBUG: 9. foreign_device_panel Inhalt erstellt")
+
         # Toggle Switch Funktion
         def on_toggle_switch(instance, value):
+            print(f"DEBUG: Toggle Switch geändert auf {value}")
             if value:
-                # Berechne die Höhe basierend auf den Kindern
-                total_height = sum(c.height for c in self.foreign_device_panel.children)
-                total_height += self.foreign_device_panel.spacing * (len(self.foreign_device_panel.children) - 1)
-                total_height += self.foreign_device_panel.padding[1] + self.foreign_device_panel.padding[3]  # Oberes und unteres Padding
-                
+                total_height = sum(c.height for c in self.foreign_device_panel.children) + self.foreign_device_panel.spacing * (len(self.foreign_device_panel.children) - 1) + self.foreign_device_panel.padding[1] + self.foreign_device_panel.padding[3]
                 self.foreign_device_panel.height = total_height
                 self.foreign_device_panel.opacity = 1
             else:
                 self.foreign_device_panel.height = dp(0)
                 self.foreign_device_panel.opacity = 0
-            
-            # Wichtig: Aktualisiere die Größe des Hauptcontainers
             Clock.schedule_once(lambda dt: update_container_height(), 0.1)
-        
+
         def update_container_height():
-            # Berechne die Gesamthöhe des Containers
-            total_height = 0
-            for child in main_container.children:
-                total_height += child.height
-            total_height += main_container.spacing * (len(main_container.children) - 1)
-            
-            # Setze die Höhe des Containers
+            print("DEBUG: update_container_height wird aufgerufen")
+            total_height = sum(c.height for c in main_container.children) + main_container.spacing * (len(main_container.children) - 1)
             main_container.height = total_height
-            
-            # Debug-Ausgabe
             print(f"DEBUG: Hauptcontainer Höhe aktualisiert: {main_container.height}")
-            print(f"DEBUG: Foreign Device Panel Höhe: {self.foreign_device_panel.height}")
-        
+
         self.foreign_device_switch.bind(active=on_toggle_switch)
-        
+        print("DEBUG: 10. Toggle Switch Funktion gebunden")
+
         # Füge Widgets zum Hauptcontainer hinzu
         main_container.add_widget(step1_label)
         main_container.add_widget(network_panel)
@@ -250,65 +251,85 @@ class NetworkScreen(ConnectionTypeBaseScreen):
         main_container.add_widget(udp_port_panel)
         main_container.add_widget(foreign_device_layout)
         main_container.add_widget(self.foreign_device_panel)
-        
-        # Aktualisiere die Höhe des Hauptcontainers
-        Clock.schedule_once(lambda dt: update_container_height(), 0.1)
-        
-        # Füge Event-Handler für Panel-Änderungen hinzu
+        print("DEBUG: 11. Alle Widgets zum main_container hinzugefügt")
+
+        # Event-Handler für Panel-Änderungen
         def on_panel_expanded(panel, is_expanded):
-            # Aktualisiere die Höhe des Hauptcontainers
+            print(f"DEBUG: Panel '{panel.title}' expanded: {is_expanded}")
             Clock.schedule_once(lambda dt: update_container_height(), 0.2)
         
         network_panel.bind(is_expanded=on_panel_expanded)
         network_number_panel.bind(is_expanded=on_panel_expanded)
         udp_port_panel.bind(is_expanded=on_panel_expanded)
-        
-        return main_container
+        print("DEBUG: 12. Panel-Handler gebunden")
 
+        # Initiale Höhe setzen
+        Clock.schedule_once(lambda dt: update_container_height(), 0.1)
+        print("DEBUG: 13. create_specific_content abgeschlossen")
+        return main_container
+    
+    def update_ip_address(self, adapter_name):
+        """Aktualisiert die angezeigte IP-Adresse basierend auf dem ausgewählten Adapter"""
+        if not hasattr(self, 'ip_label') or not self.ip_label:
+            print("DEBUG: IP-Label noch nicht initialisiert")
+            return
+            
+        ip_address = "Nicht verfügbar"
+        
+        # Adapter in der Liste suchen
+        for adapter in self.network_adapters:
+            if adapter["name"] == adapter_name:
+                # IP-Adresse aus dem Adapter-Dictionary lesen
+                ip_address = adapter.get("ip_address") or "Nicht verfügbar"
+                status = adapter.get("status", "")
+                
+                # Zusätzliche Informationen für Debug-Zwecke ausgeben
+                print(f"DEBUG: Adapter '{adapter_name}' gefunden")
+                print(f"       Status: {status}")
+                print(f"       IP-Adresse: {ip_address}")
+                break
+        
+        # IP-Adresse im Label anzeigen
+        self.ip_label.text = ip_address
+        print(f"DEBUG: IP-Adresse aktualisiert: {ip_address}")
 
     def on_back_button_clicked(self, instance):
         """Wird aufgerufen, wenn der 'Zurück'-Button geklickt wird"""
-        from kivy.app import App
         app = App.get_running_app()
         app.root.ids.screen_manager.current = 'verbindung'
 
     def on_next_button_clicked(self, instance):
         """Wird aufgerufen, wenn der 'Weiter'-Button geklickt wird"""
-        # Speichere die Konfiguration
         try:
+            # Aktuelle IP-Adresse des ausgewählten Adapters abrufen
+            ip_address = self.ip_label.text if hasattr(self, 'ip_label') else ""
+            
             config_data = {
                 "adapter": self.adapter_dropdown.current_value if hasattr(self, 'adapter_dropdown') else "Ethernet",
+                "ip_address": ip_address,
                 "network_number": self.network_number_input.text if hasattr(self, 'network_number_input') else "",
                 "udp_port": self.udp_port_dropdown.current_value if hasattr(self, 'udp_port_dropdown') else "BAC0 (47808)",
                 "foreign_device": self.foreign_device_switch.active if hasattr(self, 'foreign_device_switch') else False,
-                "bbmd_ip": self.bbmd_ip_input.text if hasattr(self, 'bbmd_ip_input') and hasattr(self, 'foreign_device_switch') and self.foreign_device_switch.active else "",
-                "bbmd_port": self.bbmd_port_dropdown.current_value if hasattr(self, 'bbmd_port_dropdown') and hasattr(self, 'foreign_device_switch') and self.foreign_device_switch.active else "BAC0 (47808)",
-                "bbmd_network": self.bbmd_network_input.text if hasattr(self, 'bbmd_network_input') and hasattr(self, 'foreign_device_switch') and self.foreign_device_switch.active else ""
+                "bbmd_ip": self.bbmd_ip_input.text if hasattr(self, 'bbmd_ip_input') and self.foreign_device_switch.active else "",
+                "bbmd_port": self.bbmd_port_dropdown.current_value if hasattr(self, 'bbmd_port_dropdown') and self.foreign_device_switch.active else "BAC0 (47808)",
+                "bbmd_network": self.bbmd_network_input.text if hasattr(self, 'bbmd_network_input') and self.foreign_device_switch.active else ""
             }
             
-            # Speichere die Konfiguration
             self.config_manager.save_connection_config("network", config_data)
-            
             print(f"DEBUG: Netzwerkkonfiguration gespeichert: {config_data}")
         except Exception as e:
             print(f"ERROR: Fehler beim Speichern der Netzwerkkonfiguration: {e}")
         
-        # Navigiere zum nächsten Screen
-        from kivy.app import App
         app = App.get_running_app()
         app.root.ids.screen_manager.current = 'geräte'
 
-
     def save_connection_config(self, connection_type, config_data):
         """Speichert die Verbindungskonfiguration für einen bestimmten Typ"""
-        # Aktualisiere den Verbindungstyp
         self.update_setting("connection", "type", connection_type)
         
-        # Aktualisiere die Konfigurationsdaten
         for key, value in config_data.items():
             if connection_type not in self.settings["connection"]:
                 self.settings["connection"][connection_type] = {}
             self.settings["connection"][connection_type][key] = value
         
-        # Speichere die Einstellungen
         self.save_settings()

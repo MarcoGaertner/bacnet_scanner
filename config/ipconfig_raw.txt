@@ -1,0 +1,99 @@
+
+Windows-IP-Konfiguration
+
+   Hostname  . . . . . . . . . . . . : DNBMN19C
+   Primres DNS-Suffix . . . . . . . : ad001.siemens.net
+   Knotentyp . . . . . . . . . . . . : Peer-Peer
+   IP-Routing aktiviert  . . . . . . : Nein
+   WINS-Proxy aktiviert  . . . . . . : Nein
+   DNS-Suffixsuchliste . . . . . . . : _sites.dc._msdcs.ad007.siemens.net
+
+Ethernet-Adapter Ethernet:
+
+   Medienstatus. . . . . . . . . . . : Medium getrennt
+   Verbindungsspezifisches DNS-Suffix: 
+   Beschreibung. . . . . . . . . . . : Intel(R) Ethernet Connection (14) I219-LM
+   Physische Adresse . . . . . . . . : A8-B1-3B-AC-25-EE
+   DHCP aktiviert. . . . . . . . . . : Nein
+   Autokonfiguration aktiviert . . . : Ja
+
+Ethernet-Adapter Ethernet 5:
+
+   Medienstatus. . . . . . . . . . . : Medium getrennt
+   Verbindungsspezifisches DNS-Suffix: 
+   Beschreibung. . . . . . . . . . . : Realtek USB GbE Family Controller #3
+   Physische Adresse . . . . . . . . : A8-B1-3B-AC-25-EE
+   DHCP aktiviert. . . . . . . . . . : Ja
+   Autokonfiguration aktiviert . . . : Ja
+
+Drahtlos-LAN-Adapter LAN-Verbindung* 1:
+
+   Medienstatus. . . . . . . . . . . : Medium getrennt
+   Verbindungsspezifisches DNS-Suffix: 
+   Beschreibung. . . . . . . . . . . : Microsoft Wi-Fi Direct Virtual Adapter
+   Physische Adresse . . . . . . . . : 88-D8-2E-FD-39-BA
+   DHCP aktiviert. . . . . . . . . . : Ja
+   Autokonfiguration aktiviert . . . : Ja
+
+Drahtlos-LAN-Adapter LAN-Verbindung* 2:
+
+   Medienstatus. . . . . . . . . . . : Medium getrennt
+   Verbindungsspezifisches DNS-Suffix: 
+   Beschreibung. . . . . . . . . . . : Microsoft Wi-Fi Direct Virtual Adapter #2
+   Physische Adresse . . . . . . . . : 8A-D8-2E-FD-39-B9
+   DHCP aktiviert. . . . . . . . . . : Ja
+   Autokonfiguration aktiviert . . . : Ja
+
+Mobiler Breitbandadapter Mobilfunk:
+
+   Medienstatus. . . . . . . . . . . : Medium getrennt
+   Verbindungsspezifisches DNS-Suffix: 
+   Beschreibung. . . . . . . . . . . : Generic Mobile Broadband Adapter
+   Physische Adresse . . . . . . . . : B4-97-8C-45-5E-51
+   DHCP aktiviert. . . . . . . . . . : Nein
+   Autokonfiguration aktiviert . . . : Ja
+
+Ethernet-Adapter VMware Network Adapter VMnet1:
+
+   Verbindungsspezifisches DNS-Suffix: 
+   Beschreibung. . . . . . . . . . . : VMware Virtual Ethernet Adapter for VMnet1
+   Physische Adresse . . . . . . . . : 00-50-56-C0-00-01
+   DHCP aktiviert. . . . . . . . . . : Nein
+   Autokonfiguration aktiviert . . . : Ja
+   IPv4-Adresse  . . . . . . . . . . : 192.168.57.1(Bevorzugt) 
+   Subnetzmaske  . . . . . . . . . . : 255.255.255.0
+   Standardgateway . . . . . . . . . : 
+   NetBIOS ber TCP/IP . . . . . . . : Aktiviert
+
+Ethernet-Adapter VMware Network Adapter VMnet8:
+
+   Verbindungsspezifisches DNS-Suffix: 
+   Beschreibung. . . . . . . . . . . : VMware Virtual Ethernet Adapter for VMnet8
+   Physische Adresse . . . . . . . . : 00-50-56-C0-00-08
+   DHCP aktiviert. . . . . . . . . . : Nein
+   Autokonfiguration aktiviert . . . : Ja
+   IPv4-Adresse  . . . . . . . . . . : 192.168.47.1(Bevorzugt) 
+   Subnetzmaske  . . . . . . . . . . : 255.255.255.0
+   Standardgateway . . . . . . . . . : 
+   NetBIOS ber TCP/IP . . . . . . . : Aktiviert
+
+Drahtlos-LAN-Adapter WLAN:
+
+   Verbindungsspezifisches DNS-Suffix: 
+   Beschreibung. . . . . . . . . . . : Intel(R) Wi-Fi 6 AX201 160MHz
+   Physische Adresse . . . . . . . . : 88-D8-2E-FD-39-B9
+   DHCP aktiviert. . . . . . . . . . : Nein
+   Autokonfiguration aktiviert . . . : Ja
+   IPv4-Adresse  . . . . . . . . . . : 172.16.13.175(Bevorzugt) 
+   Subnetzmaske  . . . . . . . . . . : 255.255.255.0
+   Standardgateway . . . . . . . . . : 172.16.13.254
+   NetBIOS ber TCP/IP . . . . . . . : Aktiviert
+
+Ethernet-Adapter Bluetooth-Netzwerkverbindung:
+
+   Medienstatus. . . . . . . . . . . : Medium getrennt
+   Verbindungsspezifisches DNS-Suffix: 
+   Beschreibung. . . . . . . . . . . : Bluetooth Device (Personal Area Network)
+   Physische Adresse . . . . . . . . : 88-D8-2E-FD-39-BD
+   DHCP aktiviert. . . . . . . . . . : Ja
+   Autokonfiguration aktiviert . . . : Ja

@@ -5,13 +5,14 @@
             "device_address": ""
         },
         "network": {
-            "adapter": "Ethernet",
+            "adapter": "WLAN",
             "network_number": "",
             "udp_port": "BAC0 (47808)",
             "foreign_device": false,
             "bbmd_ip": "",
             "bbmd_port": "BAC0 (47808)",
-            "bbmd_network": ""
+            "bbmd_network": "",
+            "ip_address": "172.16.13.175"
         },
         "mstp": {
             "com_port": "COM1",
