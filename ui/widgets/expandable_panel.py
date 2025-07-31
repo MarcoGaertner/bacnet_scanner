@@ -50,7 +50,6 @@ class ExpandablePanel(BoxLayout):
 
         self.is_expanded = new_state
         Clock.schedule_once(lambda dt: self._update_panel_state(self.is_expanded), 0)
-        
 
     def get_arrow_points(self, center_x, center_y):
         """Berechnet die Punkte für das Dreieck (Pfeil)"""
@@ -130,7 +129,6 @@ class ExpandablePanel(BoxLayout):
                     if hasattr(self.parent.parent, 'scroll_y'):
                         self.parent.parent.do_scroll_y = True
 
-
     def on_touch_down(self, touch):
         """Prüft, ob ein Klick im Header-Bereich erfolgt ist"""
         # Bereich des Headers berechnen
@@ -142,7 +140,24 @@ class ExpandablePanel(BoxLayout):
             print(f"DEBUG: Klick im Header von '{self.title}' erkannt")
             self.toggle_expansion()
             return True
+        
+        # Wenn das Panel nicht geöffnet ist, leite den Touch nicht an die Kinder weiter
+        if not self.is_expanded:
+            return super(ExpandablePanel, self).on_touch_down(touch)
+        
+        # Wenn das Panel geöffnet ist und der Klick im Inhaltsbereich ist
+        content_y = self.y
+        content_height = self.height - self.header_height - self.panel_spacing
+        if (self.collide_point(touch.x, touch.y) and 
+            touch.y >= content_y and 
+            touch.y <= content_y + content_height):
             
+            # Leite den Touch an die Kinder weiter
+            for child in self.children:
+                if child.collide_point(touch.x, touch.y):
+                    if child.dispatch('on_touch_down', touch):
+                        return True
+        
         return super(ExpandablePanel, self).on_touch_down(touch)
 
     def add_content(self, widget):

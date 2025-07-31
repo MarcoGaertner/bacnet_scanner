@@ -1,40 +1,41 @@
 <ExpandablePanel>:
     orientation: 'vertical'
+    spacing: 0
+    padding: 0
     size_hint_y: None
-    height: root.header_height + (root.panel_spacing + root.ids.content.height if root.is_expanded else 0)
-    spacing: dp(5) if root.is_expanded else 0  # Kein Spacing, wenn geschlossen
+    height: self.header_height if not self.is_expanded else self.header_height + self.panel_spacing + self.ids.content.height
+    
+    canvas.before:
+        Color:
+            rgba: self.bg_color
+        Rectangle:
+            pos: self.pos
+            size: self.size
     
     BoxLayout:
+        id: header
+        orientation: 'horizontal'
         size_hint_y: None
         height: root.header_height
+        padding: [dp(15), 0, dp(15), 0]
         
         canvas.before:
             Color:
-                rgba: root.bg_color
-            RoundedRectangle:
+                rgba: ThemeColors.current["TAB_BACKGROUND"]
+            Rectangle:
                 pos: self.pos
                 size: self.size
-                radius: [dp(8), dp(8), dp(0 if root.is_expanded else 8), dp(0 if root.is_expanded else 8)]
         
         Label:
             text: root.title
             color: root.text_color
-            font_size: dp(16)
-            bold: True
             halign: 'left'
             valign: 'middle'
             text_size: self.size
-            padding_x: dp(15)
+            size_hint_x: 0.9
         
-        Button:
-            id: toggle_btn
-            size_hint_x: None
-            width: dp(40)
-            background_normal: ''
-            background_color: (0, 0, 0, 0)
-            on_release:
-                print(f"DEBUG: Button in '{root.title}' geklickt")
-                root.toggle_expansion()  # Verwende on_press statt on_release für schnellere Reaktion
+        Widget:
+            size_hint_x: 0.1
             
             canvas.after:
                 Color:
@@ -46,16 +47,6 @@
         id: content
         orientation: 'vertical'
         size_hint_y: None
-        height: self.minimum_height if root.is_expanded else 0
-        opacity: 1 if root.is_expanded else 0
+        height: 0 if not root.is_expanded else self.minimum_height
+        opacity: 0 if not root.is_expanded else 1
         disabled: not root.is_expanded
-        padding: [dp(15), dp(15), dp(15), dp(15)]
-        spacing: dp(10)
-        
-        canvas.before:
-            Color:
-                rgba: root.bg_color
-            RoundedRectangle:
-                pos: self.pos
-                size: self.size
-                radius: [dp(0), dp(0), dp(8), dp(8)]

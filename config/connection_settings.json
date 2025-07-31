@@ -1,0 +1,29 @@
+{
+    "connection": {
+        "type": "network",
+        "device_ap": {
+            "device_address": ""
+        },
+        "network": {
+            "adapter": "Ethernet",
+            "network_number": "",
+            "udp_port": "BAC0 (47808)",
+            "foreign_device": false,
+            "bbmd_ip": "",
+            "bbmd_port": "BAC0 (47808)",
+            "bbmd_network": ""
+        },
+        "mstp": {
+            "com_port": "COM1",
+            "baud_rate": "38400",
+            "mac_address": "0"
+        },
+        "usb": {
+            "device": ""
+        },
+        "secure": {
+            "server_url": "",
+            "certificate": "Kein Zertifikat (Anonym)"
+        }
+    }
+}
