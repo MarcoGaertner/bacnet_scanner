@@ -7,31 +7,31 @@
         "device_id": {
             "name": "Device ID",
             "category": "Grundlegende Identifikation",
-            "enabled": true,
+            "enabled": false,
             "bacnet_id": 75
         },
         "vendor_id": {
             "name": "Vendor ID",
             "category": "Grundlegende Identifikation",
-            "enabled": true,
+            "enabled": false,
             "bacnet_id": 120
         },
         "object_name": {
             "name": "Object Name",
             "category": "Grundlegende Identifikation",
-            "enabled": true,
+            "enabled": false,
             "bacnet_id": 77
         },
         "location": {
             "name": "Location",
             "category": "Grundlegende Identifikation",
-            "enabled": true,
+            "enabled": false,
             "bacnet_id": 58
         },
         "description": {
             "name": "Description",
             "category": "Grundlegende Identifikation",
-            "enabled": true,
+            "enabled": false,
             "bacnet_id": 28
         },
         "app_version": {
