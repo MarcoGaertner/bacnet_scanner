@@ -8,20 +8,11 @@ Windows-IP-Konfiguration
    WINS-Proxy aktiviert  . . . . . . : Nein
    DNS-Suffixsuchliste . . . . . . . : _sites.dc._msdcs.ad007.siemens.net
 
-Ethernet-Adapter Ethernet:
+Ethernet-Adapter Ethernet 7:
 
    Medienstatus. . . . . . . . . . . : Medium getrennt
    Verbindungsspezifisches DNS-Suffix: 
-   Beschreibung. . . . . . . . . . . : Intel(R) Ethernet Connection (14) I219-LM
-   Physische Adresse . . . . . . . . : A8-B1-3B-AC-25-EE
-   DHCP aktiviert. . . . . . . . . . : Nein
-   Autokonfiguration aktiviert . . . : Ja
-
-Ethernet-Adapter Ethernet 5:
-
-   Medienstatus. . . . . . . . . . . : Medium getrennt
-   Verbindungsspezifisches DNS-Suffix: 
-   Beschreibung. . . . . . . . . . . : Realtek USB GbE Family Controller #3
+   Beschreibung. . . . . . . . . . . : Realtek USB GbE Family Controller #5
    Physische Adresse . . . . . . . . : A8-B1-3B-AC-25-EE
    DHCP aktiviert. . . . . . . . . . : Ja
    Autokonfiguration aktiviert . . . : Ja
@@ -53,6 +44,18 @@ Mobiler Breitbandadapter Mobilfunk:
    DHCP aktiviert. . . . . . . . . . : Nein
    Autokonfiguration aktiviert . . . : Ja
 
+Ethernet-Adapter Ethernet:
+
+   Verbindungsspezifisches DNS-Suffix: 
+   Beschreibung. . . . . . . . . . . : Intel(R) Ethernet Connection (14) I219-LM
+   Physische Adresse . . . . . . . . : A8-B1-3B-AC-25-EE
+   DHCP aktiviert. . . . . . . . . . : Nein
+   Autokonfiguration aktiviert . . . : Ja
+   IPv4-Adresse  . . . . . . . . . . : 172.16.13.175(Bevorzugt) 
+   Subnetzmaske  . . . . . . . . . . : 255.255.255.0
+   Standardgateway . . . . . . . . . : 172.16.13.254
+   NetBIOS ber TCP/IP . . . . . . . : Aktiviert
+
 Ethernet-Adapter VMware Network Adapter VMnet1:
 
    Verbindungsspezifisches DNS-Suffix: 
@@ -79,15 +82,12 @@ Ethernet-Adapter VMware Network Adapter VMnet8:
 
 Drahtlos-LAN-Adapter WLAN:
 
+   Medienstatus. . . . . . . . . . . : Medium getrennt
    Verbindungsspezifisches DNS-Suffix: 
    Beschreibung. . . . . . . . . . . : Intel(R) Wi-Fi 6 AX201 160MHz
    Physische Adresse . . . . . . . . : 88-D8-2E-FD-39-B9
-   DHCP aktiviert. . . . . . . . . . : Nein
+   DHCP aktiviert. . . . . . . . . . : Ja
    Autokonfiguration aktiviert . . . : Ja
-   IPv4-Adresse  . . . . . . . . . . : 172.16.13.175(Bevorzugt) 
-   Subnetzmaske  . . . . . . . . . . : 255.255.255.0
-   Standardgateway . . . . . . . . . : 172.16.13.254
-   NetBIOS ber TCP/IP . . . . . . . : Aktiviert
 
 Ethernet-Adapter Bluetooth-Netzwerkverbindung:
 

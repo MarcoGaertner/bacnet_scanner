@@ -1,0 +1,16 @@
+2025-07-31 14:40:33,998 - DirectBACnetScanner - INFO - BACnet Scanner gestartet mit IP 172.16.13.175:47808
+2025-07-31 14:40:34,000 - DirectBACnetScanner - INFO - Verwende lokale IP: 172.16.13.175, Broadcast-Adresse: 172.16.13.255
+2025-07-31 14:40:34,000 - DirectBACnetScanner - ERROR - Fehler beim Netzwerk-Scan: pack expected 4 items for packing (got 6)
+2025-07-31 14:40:34,011 - DirectBACnetScanner - ERROR - Traceback (most recent call last):
+  File "C:\Users\z004M8JW\OneDrive - Siemens AG\Dokumente\Unikram\T3300 Bachelorarbeit\BACnet_Scanner\bacnet_scanner\scanner\direct_bacnet_scan.py", line 184, in scan_network
+    ("Who-Is Bereich 0-4194303 (maximaler Bereich)", build_whois_request(0, 4194303)),
+                                                     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\z004M8JW\OneDrive - Siemens AG\Dokumente\Unikram\T3300 Bachelorarbeit\BACnet_Scanner\bacnet_scanner\scanner\direct_bacnet_scan.py", line 85, in build_whois_request
+    whois_data = struct.pack(
+        '>BB II',     # Format: 2 Context Tags gefolgt von 2 Integer-Werten
+    ...<5 lines>...
+        high_limit    # High Limit Integer-Wert
+    )
+struct.error: pack expected 4 items for packing (got 6)
+
+2025-07-31 14:40:34,013 - DirectBACnetScanner - INFO - Scan abgeschlossen, 0 Geräte gefunden
