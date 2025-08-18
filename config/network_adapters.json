@@ -1,6 +1,6 @@
 [
   {
-    "name": "Ethernet",
+    "name": "Ethernet 4",
     "status": "Verbunden",
     "type": "Ethernet",
     "mac_address": "A8-B1-3B-AC-25-EE",
@@ -22,6 +22,17 @@
     "alternate_dns": ""
   },
   {
+    "name": "Ethernet",
+    "status": "Nicht verbunden",
+    "type": "Ethernet",
+    "mac_address": "A8-B1-3B-AC-25-EE",
+    "ip_address": "",
+    "subnet_mask": "",
+    "default_gateway": "",
+    "preferred_dns": "",
+    "alternate_dns": ""
+  },
+  {
     "name": "Ethernet 7",
     "status": "Nicht verbunden",
     "type": "Ethernet",
@@ -37,17 +48,6 @@
     "status": "Nicht verbunden",
     "type": "Unbekannt",
     "mac_address": "88-D8-2E-FD-39-BA",
-    "ip_address": "",
-    "subnet_mask": "",
-    "default_gateway": "",
-    "preferred_dns": "",
-    "alternate_dns": ""
-  },
-  {
-    "name": "LAN-Verbindung* 2",
-    "status": "Nicht verbunden",
-    "type": "Unbekannt",
-    "mac_address": "8A-D8-2E-FD-39-B9",
     "ip_address": "",
     "subnet_mask": "",
     "default_gateway": "",

@@ -5,7 +5,7 @@
             "device_address": ""
         },
         "network": {
-            "adapter": "Ethernet",
+            "adapter": "Ethernet 4",
             "network_number": "",
             "udp_port": "BAC0 (47808)",
             "foreign_device": false,

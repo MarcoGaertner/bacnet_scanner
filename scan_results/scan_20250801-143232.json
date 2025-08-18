@@ -1,0 +1,1182 @@
+{
+  "timestamp": "2025-08-01T14:32:26.747184",
+  "device_count": 98,
+  "devices": [
+    {
+      "device_id": 1049621,
+      "address": "172.16.13.198",
+      "properties": {
+        "object-name": "Desigo CC Workstation 1049621",
+        "description": "Desigo CC BACnet Workstation Device",
+        "location": "PC",
+        "vendor-name": "Siemens",
+        "model-name": "Desigo CC",
+        "firmware-revision": "7.0"
+      }
+    },
+    {
+      "device_id": 3148822,
+      "address": "172.16.13.22",
+      "properties": {
+        "object-name": "01DB301",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'C'Flr_01'C011",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E16A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3148821,
+      "address": "172.16.13.21",
+      "properties": {
+        "object-name": "01DA301",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'C'Flr_01'C011",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3148811,
+      "address": "172.16.13.11",
+      "properties": {
+        "object-name": "00DA301",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'C'Flr_00'C001",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3148814,
+      "address": "172.16.13.14",
+      "properties": {
+        "object-name": "00DB302",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'C'Flr_00'C002",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E16A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3148812,
+      "address": "172.16.13.12",
+      "properties": {
+        "object-name": "00DB301",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'C'Flr_00'C001",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E16A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3148823,
+      "address": "172.16.13.23",
+      "properties": {
+        "object-name": "01DA302",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'C'Flr_01'C012",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3148813,
+      "address": "172.16.13.13",
+      "properties": {
+        "object-name": "00DA302",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'C'Flr_00'C002",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3148831,
+      "address": "172.16.13.31",
+      "properties": {
+        "object-name": "02DA301",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'C'Flr_02'C021",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3148825,
+      "address": "172.16.13.25",
+      "properties": {
+        "object-name": "01DA303",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'C'Flr_01'C013",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3148832,
+      "address": "172.16.13.32",
+      "properties": {
+        "object-name": "02DB301",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'C'Flr_02'C021",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E16A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 681013,
+      "address": "172.16.13.53",
+      "properties": {
+        "object-name": "AS_C100 02PC310",
+        "description": "M-Bus Z\u00e4hler EG/1.OG",
+        "location": "MHM_NL'CI'Z\u00e4hler BTC'Z\u00e4hler 2.OG",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC4.E16-2",
+        "firmware-revision": "02.21.194.29"
+      }
+    },
+    {
+      "device_id": 3148824,
+      "address": "172.16.13.24",
+      "properties": {
+        "object-name": "01DB302",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'C'Flr_01'C012",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E16A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 2100225,
+      "address": "172.16.13.1",
+      "properties": {
+        "object-name": "BNR03",
+        "description": "PXG Router 03 Geb. C",
+        "location": "",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXG3.M-1",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3148834,
+      "address": "172.16.13.34",
+      "properties": {
+        "object-name": "02DB302",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'C'Flr_02'C022",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E16A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 681007,
+      "address": "172.16.15.15",
+      "properties": {
+        "object-name": "CP_B001",
+        "description": "Control Point CP_B001.B",
+        "location": "MHM_NL'A",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXM40.E",
+        "firmware-revision": "02.21.194.25"
+      }
+    },
+    {
+      "device_id": 681005,
+      "address": "172.16.15.24",
+      "properties": {
+        "object-name": "CP_B200",
+        "description": "Control Point B200",
+        "location": "MHM_NL'HC",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXM40.E",
+        "firmware-revision": "02.21.194.25"
+      }
+    },
+    {
+      "device_id": 3148833,
+      "address": "172.16.13.33",
+      "properties": {
+        "object-name": "02DA302",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'C'Flr_02'C022",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 2098178,
+      "address": "172.16.15.1",
+      "properties": {
+        "object-name": "BNR05",
+        "description": "PXG Router 05 Prim\u00e4ranlagen",
+        "location": "",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXG3.M-1",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 681017,
+      "address": "172.16.13.55",
+      "properties": {
+        "object-name": "AS_C100 02CENF310",
+        "description": "Automation station 05",
+        "location": "MHM_NL'RPlt'C'Flr_02'C100",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC5.E003",
+        "firmware-revision": "02.21.194.29"
+      }
+    },
+    {
+      "device_id": 2098177,
+      "address": "172.16.11.1",
+      "properties": {
+        "object-name": "BNR01",
+        "description": "PXG Router 01 Geb. A",
+        "location": "",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXG3.M-1",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 2101249,
+      "address": "172.16.14.1",
+      "properties": {
+        "object-name": "BNR04",
+        "description": "PXG Router 04 Geb D",
+        "location": "",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXG3.M-1",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 2099201,
+      "address": "172.16.12.1",
+      "properties": {
+        "object-name": "BNR02",
+        "description": "PXG Router 02 Geb. B",
+        "location": "",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXG3.M-1",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3149846,
+      "address": "172.16.14.22",
+      "properties": {
+        "object-name": "01DB401",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'D'Flr_01'D011",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E16A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3149858,
+      "address": "172.16.14.34",
+      "properties": {
+        "object-name": "02DB402",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'D'Flr_02'D022",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E16A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3149848,
+      "address": "172.16.14.24",
+      "properties": {
+        "object-name": "01DB402",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'D'Flr_01'D012",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E16A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3149849,
+      "address": "172.16.14.25",
+      "properties": {
+        "object-name": "01DA403",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'D'Flr_01'D013",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3149836,
+      "address": "172.16.14.12",
+      "properties": {
+        "object-name": "00DB401",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'D'Flr_00'D001",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E16A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3149835,
+      "address": "172.16.14.11",
+      "properties": {
+        "object-name": "00DA401",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'D'Flr_00'D001",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3149838,
+      "address": "172.16.14.14",
+      "properties": {
+        "object-name": "00DA404",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'D'Flr_00'D002",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3149837,
+      "address": "172.16.14.13",
+      "properties": {
+        "object-name": "00DA402",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'D'Flr_00'D002",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3146673,
+      "address": "172.16.11.21",
+      "properties": {
+        "object-name": "01DA101",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'A'Flr_01'A011",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3146794,
+      "address": "172.16.11.42",
+      "properties": {
+        "object-name": "03DB101",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'A'Flr_03'A031",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E16A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3149875,
+      "address": "172.16.14.51",
+      "properties": {
+        "object-name": "00DA410",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'D'Flr_00'D100",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3146787,
+      "address": "172.16.11.35",
+      "properties": {
+        "object-name": "02DB103",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'A'Flr_02'A023",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E16A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3149856,
+      "address": "172.16.14.32",
+      "properties": {
+        "object-name": "02DB401",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'D'Flr_02'D021",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E16A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3146784,
+      "address": "172.16.11.32",
+      "properties": {
+        "object-name": "02DB101",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'A'Flr_02'A021",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E16A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3146797,
+      "address": "172.16.11.45",
+      "properties": {
+        "object-name": "03DB103",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'A'Flr_03'A033",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E16A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3146766,
+      "address": "172.16.11.14",
+      "properties": {
+        "object-name": "00DA103",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'A'Flr_00'A003",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3146796,
+      "address": "172.16.11.44",
+      "properties": {
+        "object-name": "03DA103",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'A'Flr_03'A033",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 681016,
+      "address": "172.16.14.54",
+      "properties": {
+        "object-name": "AS_D100 02PD410",
+        "description": "M-Bus Z\u00e4hler 2.OG",
+        "location": "MHM_NL'CI'Z\u00e4hler BTD'Z\u00e4hler 2.OG",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC4.E16-2",
+        "firmware-revision": "02.22.233.24"
+      }
+    },
+    {
+      "device_id": 3146774,
+      "address": "172.16.11.22",
+      "properties": {
+        "object-name": "01DB101",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'A'Flr_01'A011",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E16A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3147791,
+      "address": "172.16.12.15",
+      "properties": {
+        "object-name": "00DB202",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'B'Flr_00'B002",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E16A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3146777,
+      "address": "172.16.11.25",
+      "properties": {
+        "object-name": "01DB103",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'A'Flr_01'A013",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E16A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3147807,
+      "address": "172.16.12.31",
+      "properties": {
+        "object-name": "02DA201",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'B'Flr_02'B021",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3147818,
+      "address": "172.16.12.42",
+      "properties": {
+        "object-name": "03DB201",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'B'Flr_03'B031",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E16A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 5000,
+      "address": "172.16.15.252",
+      "properties": {
+        "object-name": "BACnet-Edge-Router-5000",
+        "description": "BACnet Edge Router 1.5",
+        "location": "Unspecified",
+        "vendor-name": "Siemens",
+        "model-name": "Connect X300/X200",
+        "firmware-revision": "BER-1.5"
+      }
+    },
+    {
+      "device_id": 3147808,
+      "address": "172.16.12.32",
+      "properties": {
+        "object-name": "02DB201",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'B'Flr_02'B021",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E16A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3146786,
+      "address": "172.16.11.34",
+      "properties": {
+        "object-name": "02DA103",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'A'Flr_02'A023",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3147798,
+      "address": "172.16.12.22",
+      "properties": {
+        "object-name": "01DB201",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'B'Flr_01'B011",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E16A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3147788,
+      "address": "172.16.12.12",
+      "properties": {
+        "object-name": "00DB201",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'B'Flr_00'B001",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E16A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3147827,
+      "address": "172.16.12.51",
+      "properties": {
+        "object-name": "00DA210",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'B'Flr_00'B100",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3147790,
+      "address": "172.16.12.14",
+      "properties": {
+        "object-name": "00DA202",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'B'Flr_00'B002",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 681012,
+      "address": "172.16.12.54",
+      "properties": {
+        "object-name": "AS_B100 02PD210",
+        "description": "M-Bus Z\u00e4hler 2.OG/3.OG",
+        "location": "MHM_NL'CI'Z\u00e4hler BTB'Z\u00e4hler 2.OG",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC4.E16-2",
+        "firmware-revision": "02.21.194.29"
+      }
+    },
+    {
+      "device_id": 3147787,
+      "address": "172.16.12.11",
+      "properties": {
+        "object-name": "00DA201",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'B'Flr_00'B001",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3147817,
+      "address": "172.16.12.41",
+      "properties": {
+        "object-name": "03DA201",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'B'Flr_03'B031",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3146767,
+      "address": "172.16.11.15",
+      "properties": {
+        "object-name": "00DB103",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'A'Flr_00'A003",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E16A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3147792,
+      "address": "172.16.12.16",
+      "properties": {
+        "object-name": "00DA203",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'B'Flr_00'B003",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 681011,
+      "address": "172.16.12.53",
+      "properties": {
+        "object-name": "AS_B100 02PC210",
+        "description": "M-Bus Z\u00e4hler EG/1.OG",
+        "location": "MHM_NL'CI'Z\u00e4hler BTB'Z\u00e4hler 2.OG",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC4.E16-2",
+        "firmware-revision": "02.21.194.29"
+      }
+    },
+    {
+      "device_id": 3146795,
+      "address": "172.16.11.43",
+      "properties": {
+        "object-name": "03DA102",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'A'Flr_03'A032",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 681006,
+      "address": "172.16.15.13",
+      "properties": {
+        "object-name": "AS_B001.A",
+        "description": "Automation station B001.A",
+        "location": "MHM_NL'A",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC7.E400M",
+        "firmware-revision": "02.22.233.20"
+      }
+    },
+    {
+      "device_id": 681004,
+      "address": "172.16.15.21",
+      "properties": {
+        "object-name": "AS_B200",
+        "description": "Automation station B200",
+        "location": "MHM_NL'E",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC7.E400M",
+        "firmware-revision": "02.22.233.20"
+      }
+    },
+    {
+      "device_id": 681014,
+      "address": "172.16.13.54",
+      "properties": {
+        "object-name": "AS_C100 02PD310",
+        "description": "M-Bus Z\u00e4hler 2.OG/3.OG",
+        "location": "MHM_NL'CI'Z\u00e4hler BTC'Z\u00e4hler 2.OG",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC4.E16-2",
+        "firmware-revision": "02.21.194.29"
+      }
+    },
+    {
+      "device_id": 3147828,
+      "address": "172.16.12.52",
+      "properties": {
+        "object-name": "02DA210",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'B'Flr_02'B100",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3146763,
+      "address": "172.16.11.11",
+      "properties": {
+        "object-name": "00DA101",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'A'Flr_00'A001",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 681008,
+      "address": "172.16.15.27",
+      "properties": {
+        "object-name": "AS_B001.B",
+        "description": "Automation station AS_B001.B",
+        "location": "MHM_NL'A",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC4.E16",
+        "firmware-revision": "02.21.194.25"
+      }
+    },
+    {
+      "device_id": 681003,
+      "address": "172.16.15.16",
+      "properties": {
+        "object-name": "AS_A200.2",
+        "description": "Automation station A200.2",
+        "location": "MHM_NL'A",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC7.E400M",
+        "firmware-revision": "02.22.233.20"
+      }
+    },
+    {
+      "device_id": 681002,
+      "address": "172.16.15.12",
+      "properties": {
+        "object-name": "AS_A200.1B",
+        "description": "Automation station A200.1B",
+        "location": "MHM_NL'E",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC7.E400M",
+        "firmware-revision": "02.22.233.20"
+      }
+    },
+    {
+      "device_id": 3148852,
+      "address": "172.16.13.52",
+      "properties": {
+        "object-name": "02DA310",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'C'Flr_02'C100",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3146803,
+      "address": "172.16.11.51",
+      "properties": {
+        "object-name": "00DA110",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'A'Flr_00'A100",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3147809,
+      "address": "172.16.12.33",
+      "properties": {
+        "object-name": "02DA202",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'B'Flr_02'B022",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3147797,
+      "address": "172.16.12.21",
+      "properties": {
+        "object-name": "01DA201",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'B'Flr_01'B011",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 4122122,
+      "address": "100:0xac100ffcbad2",
+      "properties": {
+        "object-name": "Siemens LoBo",
+        "description": "",
+        "location": "",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "Siemens Smart Building Recorder",
+        "firmware-revision": ""
+      }
+    },
+    {
+      "device_id": 3146804,
+      "address": "172.16.11.52",
+      "properties": {
+        "object-name": "02DA110",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'A'Flr_02'A100",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3149847,
+      "address": "172.16.14.23",
+      "properties": {
+        "object-name": "01DA402",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'D'Flr_01'D012",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3149859,
+      "address": "172.16.14.35",
+      "properties": {
+        "object-name": "02DA403",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'D'Flr_02'D023",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 681015,
+      "address": "172.16.14.53",
+      "properties": {
+        "object-name": "AS_D100 02PC410",
+        "description": "M-Bus Z\u00e4hler EG/1.OG",
+        "location": "MHM_NL'CI'Z\u00e4hler BTD'Z\u00e4hler 2.OG",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC4.E16-2",
+        "firmware-revision": "02.20.194.9"
+      }
+    },
+    {
+      "device_id": 681009,
+      "address": "172.16.11.53",
+      "properties": {
+        "object-name": "AS_A100 02PC110",
+        "description": "M-Bus Z\u00e4hler EG/1.OG",
+        "location": "MHM_NL'CI'Z\u00e4hler BTA'Z\u00e4hler 2.OG",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC4.E16",
+        "firmware-revision": "02.21.194.29"
+      }
+    },
+    {
+      "device_id": 3148815,
+      "address": "172.16.13.15",
+      "properties": {
+        "object-name": "00DA303",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'C'Flr_00'C003",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3146764,
+      "address": "172.16.11.12",
+      "properties": {
+        "object-name": "00DB101",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'A'Flr_00'A001",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3149855,
+      "address": "172.16.14.31",
+      "properties": {
+        "object-name": "02DA401",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'D'Flr_02'D021",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3148816,
+      "address": "172.16.13.16",
+      "properties": {
+        "object-name": "00DA304",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'C'Flr_00'C004",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3147819,
+      "address": "172.16.12.43",
+      "properties": {
+        "object-name": "03DA202",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'B'Flr_03'B032",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3149839,
+      "address": "172.16.14.15",
+      "properties": {
+        "object-name": "00DA403",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'D'Flr_00'D003",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3146785,
+      "address": "172.16.11.33",
+      "properties": {
+        "object-name": "02DA102",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'A'Flr_02'A022",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3147799,
+      "address": "172.16.12.23",
+      "properties": {
+        "object-name": "01DA202",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'B'Flr_01'B012",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3149876,
+      "address": "172.16.14.52",
+      "properties": {
+        "object-name": "02DA410",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'D'Flr_02'D100",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3149845,
+      "address": "172.16.14.21",
+      "properties": {
+        "object-name": "01DA401",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'D'Flr_01'D011",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3149857,
+      "address": "172.16.14.33",
+      "properties": {
+        "object-name": "02DA402",
+        "description": "Automation station",
+        "location": "MHM_NL'RPlt'D'Flr_02'D022",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3146793,
+      "address": "172.16.11.41",
+      "properties": {
+        "object-name": "03DA101",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'A'Flr_03'A031",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3146775,
+      "address": "172.16.11.23",
+      "properties": {
+        "object-name": "01DA102",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'A'Flr_01'A012",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3148851,
+      "address": "172.16.13.51",
+      "properties": {
+        "object-name": "00DA310",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'C'Flr_00'C100",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3146783,
+      "address": "172.16.11.31",
+      "properties": {
+        "object-name": "02DA101",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'A'Flr_02'A021",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 681001,
+      "address": "172.16.15.11",
+      "properties": {
+        "object-name": "AS_A200.1A",
+        "description": "Automation station A200.1A",
+        "location": "MHM_NL'A",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC7.E400M",
+        "firmware-revision": "02.22.233.24"
+      }
+    },
+    {
+      "device_id": 3148835,
+      "address": "172.16.13.35",
+      "properties": {
+        "object-name": "02DA303",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'C'Flr_02'C023",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3146776,
+      "address": "172.16.11.24",
+      "properties": {
+        "object-name": "01DA103",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'A'Flr_01'A013",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 3146765,
+      "address": "172.16.11.13",
+      "properties": {
+        "object-name": "00DA102",
+        "description": "Automationsstation",
+        "location": "MHM_NL'RPlt'A'Flr_00'A002",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC3.E75A-2",
+        "firmware-revision": "v01.21"
+      }
+    },
+    {
+      "device_id": 681010,
+      "address": "172.16.11.54",
+      "properties": {
+        "object-name": "AS_A100 02PD110",
+        "description": "M-Bus Z\u00e4hler 2.OG",
+        "location": "MHM_NL'CI'Z\u00e4hler BTA'Z\u00e4hler 2.OG",
+        "vendor-name": "Siemens Building Technologies",
+        "model-name": "PXC4.E16",
+        "firmware-revision": "02.21.194.29"
+      }
+    }
+  ]
+}

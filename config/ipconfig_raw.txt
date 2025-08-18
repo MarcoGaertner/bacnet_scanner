@@ -8,6 +8,15 @@ Windows-IP-Konfiguration
    WINS-Proxy aktiviert  . . . . . . : Nein
    DNS-Suffixsuchliste . . . . . . . : _sites.dc._msdcs.ad007.siemens.net
 
+Ethernet-Adapter Ethernet:
+
+   Medienstatus. . . . . . . . . . . : Medium getrennt
+   Verbindungsspezifisches DNS-Suffix: 
+   Beschreibung. . . . . . . . . . . : Intel(R) Ethernet Connection (14) I219-LM
+   Physische Adresse . . . . . . . . : A8-B1-3B-AC-25-EE
+   DHCP aktiviert. . . . . . . . . . : Ja
+   Autokonfiguration aktiviert . . . : Ja
+
 Ethernet-Adapter Ethernet 7:
 
    Medienstatus. . . . . . . . . . . : Medium getrennt
@@ -26,15 +35,6 @@ Drahtlos-LAN-Adapter LAN-Verbindung* 1:
    DHCP aktiviert. . . . . . . . . . : Ja
    Autokonfiguration aktiviert . . . : Ja
 
-Drahtlos-LAN-Adapter LAN-Verbindung* 2:
-
-   Medienstatus. . . . . . . . . . . : Medium getrennt
-   Verbindungsspezifisches DNS-Suffix: 
-   Beschreibung. . . . . . . . . . . : Microsoft Wi-Fi Direct Virtual Adapter #2
-   Physische Adresse . . . . . . . . : 8A-D8-2E-FD-39-B9
-   DHCP aktiviert. . . . . . . . . . : Ja
-   Autokonfiguration aktiviert . . . : Ja
-
 Mobiler Breitbandadapter Mobilfunk:
 
    Medienstatus. . . . . . . . . . . : Medium getrennt
@@ -43,18 +43,6 @@ Mobiler Breitbandadapter Mobilfunk:
    Physische Adresse . . . . . . . . : B4-97-8C-45-5E-51
    DHCP aktiviert. . . . . . . . . . : Nein
    Autokonfiguration aktiviert . . . : Ja
-
-Ethernet-Adapter Ethernet:
-
-   Verbindungsspezifisches DNS-Suffix: 
-   Beschreibung. . . . . . . . . . . : Intel(R) Ethernet Connection (14) I219-LM
-   Physische Adresse . . . . . . . . : A8-B1-3B-AC-25-EE
-   DHCP aktiviert. . . . . . . . . . : Nein
-   Autokonfiguration aktiviert . . . : Ja
-   IPv4-Adresse  . . . . . . . . . . : 172.16.13.175(Bevorzugt) 
-   Subnetzmaske  . . . . . . . . . . : 255.255.255.0
-   Standardgateway . . . . . . . . . : 172.16.13.254
-   NetBIOS ber TCP/IP . . . . . . . : Aktiviert
 
 Ethernet-Adapter VMware Network Adapter VMnet1:
 
@@ -78,6 +66,18 @@ Ethernet-Adapter VMware Network Adapter VMnet8:
    IPv4-Adresse  . . . . . . . . . . : 192.168.47.1(Bevorzugt) 
    Subnetzmaske  . . . . . . . . . . : 255.255.255.0
    Standardgateway . . . . . . . . . : 
+   NetBIOS ber TCP/IP . . . . . . . : Aktiviert
+
+Ethernet-Adapter Ethernet 4:
+
+   Verbindungsspezifisches DNS-Suffix: 
+   Beschreibung. . . . . . . . . . . : Realtek USB GbE Family Controller #2
+   Physische Adresse . . . . . . . . : A8-B1-3B-AC-25-EE
+   DHCP aktiviert. . . . . . . . . . : Nein
+   Autokonfiguration aktiviert . . . : Ja
+   IPv4-Adresse  . . . . . . . . . . : 172.16.13.175(Bevorzugt) 
+   Subnetzmaske  . . . . . . . . . . : 255.255.255.0
+   Standardgateway . . . . . . . . . : 172.16.13.254
    NetBIOS ber TCP/IP . . . . . . . : Aktiviert
 
 Drahtlos-LAN-Adapter WLAN:
