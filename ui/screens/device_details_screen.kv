@@ -5,20 +5,37 @@
     key: ""
     value: ""
     size_hint_y: None
-    height: dp(36)
-    spacing: dp(8)
+    height: dp(60)  # Etwas höher für bessere Lesbarkeit
+    orientation: 'vertical'  # Vertikal statt horizontal
+    spacing: dp(4)
+    padding: [dp(8), dp(4), dp(8), dp(4)]
+    
+    # Hintergrund für bessere Abgrenzung
+    canvas.before:
+        Color:
+            rgba: colors.get_color_with_alpha("CARD_BACKGROUND", 0.3)
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    
     Label:
         text: root.key
         color: colors.TEXT_COLOR
+        font_size: dp(14)
+        bold: True
         halign: 'left'
         valign: 'middle'
         text_size: self.size
+        size_hint_y: 0.4
+        
     Label:
         text: root.value
         color: colors.get_color_with_alpha("TEXT_COLOR", 0.85)
+        font_size: dp(12)
         halign: 'left'
-        valign: 'middle'
+        valign: 'top'
         text_size: self.size
+        size_hint_y: 0.6
 
 <DeviceDetailsScreen>:
     canvas.before:
@@ -44,7 +61,7 @@
             text_size: self.size
 
         Label:
-            text: "Device-ID: "+str(root.device_id) + ("   |   "+root.address if root.address else "")
+            text: "Device-ID: "+str(root.device_id) + (" | "+root.address if root.address else "")
             color: colors.get_color_with_alpha("TEXT_COLOR", 0.75)
             size_hint_y: None
             height: dp(24)
@@ -54,12 +71,10 @@
         ScrollView:
             do_scroll_x: False
             bar_width: dp(6)
-            GridLayout:
+            
+            BoxLayout:  # Geändert von GridLayout zu BoxLayout
                 id: details_container
-                cols: 2
+                orientation: 'vertical'  # Vertikal statt Spalten
                 size_hint_y: None
                 height: self.minimum_height
-                width: self.parent.width
-                size_hint_x: 1
-                row_default_height: dp(30)
-                spacing: dp(6)
+                spacing: dp(8)  # Abstand zwischen den Einträgen

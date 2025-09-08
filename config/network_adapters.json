@@ -4,7 +4,7 @@
     "status": "Verbunden",
     "type": "Ethernet",
     "mac_address": "A8-B1-3B-AC-25-EE",
-    "ip_address": "172.16.13.175",
+    "ip_address": "172.16.13.120",
     "subnet_mask": "255.255.255.0",
     "default_gateway": "172.16.13.254",
     "preferred_dns": "",

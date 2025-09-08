@@ -68,6 +68,30 @@ class DeviceDiscovery:
         else:
             return {"error": f"Unbekannter Verbindungstyp: {connection_type}"}
     
+    def _load_user_info(self) -> Dict[str, Any]:
+        """Lädt die Benutzerinformationen aus der user_settings.json"""
+        user_info = {}
+        try:
+            base_dir = Path(os.path.dirname(os.path.abspath(__file__))).parent  # Projektwurzel
+            user_settings_path = base_dir / "config" / "user_settings.json"
+            if user_settings_path.exists():
+                with open(user_settings_path, "r", encoding="utf-8") as f:
+                    raw = json.load(f) or {}
+                # Erwartete Struktur: {"user": {"first_name": "...", "last_name": "...", "email": "...", "company": "..."}}
+                u = raw.get("user", raw)
+                user_info = {
+                    "first_name": u.get("first_name", ""),
+                    "last_name":  u.get("last_name", ""),
+                    "email":      u.get("email", ""),
+                    "company":    u.get("company", ""),
+                }
+                print(f"DEBUG: User-Info geladen: {user_info}")
+        except Exception as e:
+            print(f"WARNING: Konnte User-Info nicht laden: {e}")
+            user_info = {}
+        
+        return user_info
+    
     async def _discover_network_devices(self) -> Dict[str, Any]:
         """
         Entdeckt BACnet/IP-Geräte im Netzwerk
@@ -118,40 +142,31 @@ class DeviceDiscovery:
                 "adapter": adapter_name
             }
             
-            # --- User-Infos laden (aus config/user_settings.json) ---
-            user_info = {}
-            try:
-                base_dir = Path(os.path.dirname(os.path.abspath(__file__))).parent  # Projektwurzel
-                user_settings_path = base_dir / "config" / "user_settings.json"
-                if user_settings_path.exists():
-                    with open(user_settings_path, "r", encoding="utf-8") as f:
-                        raw = json.load(f) or {}
-                    # Erwartete Struktur: {"user": {"first_name": "...", "last_name": "...", "email": "...", "company": "..."}}
-                    u = raw.get("user", raw)
-                    user_info = {
-                        "first_name": u.get("first_name", ""),
-                        "last_name":  u.get("last_name", ""),
-                        "email":      u.get("email", ""),
-                        "company":    u.get("company", ""),
-                    }
-            except Exception as _e:
-                # still write scan without user_info
-                user_info = {}
+            # User-Infos laden
+            user_info = self._load_user_info()
             
             # Scan-Ergebnis in der Datenbank speichern
             scan_id = self.storage.save_scan_result(
                 scan_result, 
                 description=f"BACnet/IP-Scan auf {ip_address}:{udp_port}", 
                 connection_info=connection_info,
-                user_info=user_info
+                user_info=user_info  # Jetzt korrekt übergeben
             )
             
+            # Prüfen, ob das Speichern erfolgreich war
+            if scan_id == -1:
+                print("ERROR: Scan konnte nicht in der Datenbank gespeichert werden")
+                return {"error": "Scan konnte nicht gespeichert werden"}
+            
             # Alte Scans löschen, wenn mehr als 100 vorhanden sind
-            self.storage.delete_old_scans(100)
+            deleted_count = self.storage.delete_old_scans(100)
+            if deleted_count > 0:
+                print(f"INFO: {deleted_count} alte Scans gelöscht")
             
             # Scan-ID zum Ergebnis hinzufügen
             scan_result["scan_id"] = scan_id
             
+            print(f"SUCCESS: Scan erfolgreich gespeichert mit ID: {scan_id}")
             return scan_result
         
         except Exception as e:
@@ -164,46 +179,6 @@ class DeviceDiscovery:
             # BACnet-Client schließen
             self.bacnet_client.close()
     
-    def _save_scan_result(self, scan_result: Dict[str, Any], description: str = ""):
-        """Speichert das Scan-Ergebnis mit dem neuen Speichermechanismus"""
-        try:
-            scan_id = self.storage.save_scan_result(scan_result, description)
-            print(f"Scan-Ergebnis gespeichert mit ID: {scan_id}")
-            
-            # Alte Scan-Ergebnisse löschen, wenn mehr als 100 vorhanden sind
-            deleted_count = self.storage.delete_old_scans(100)
-            if deleted_count > 0:
-                print(f"{deleted_count} alte Scan-Ergebnisse gelöscht.")
-                
-            return scan_id
-        except Exception as e:
-            print(f"Fehler beim Speichern des Scan-Ergebnisses: {e}")
-            import traceback
-            traceback.print_exc()
-            return None
-        
-        
-    def _cleanup_old_scans(self):
-        """
-        Löscht alte Scan-Ergebnisse, wenn mehr als 100 vorhanden sind
-        """
-        try:
-            # Alle Scan-Dateien auflisten
-            scan_files = sorted([
-                os.path.join(self.scan_results_dir, f)
-                for f in os.listdir(self.scan_results_dir)
-                if f.startswith("scan_") and f.endswith(".json")
-            ])
-            
-            # Überprüfen, ob mehr als 100 Scan-Dateien vorhanden sind
-            while len(scan_files) > 100:
-                # Älteste Datei löschen
-                oldest_file = scan_files.pop(0)
-                os.remove(oldest_file)
-                print(f"Alte Scan-Datei gelöscht: {oldest_file}")
-        except Exception as e:
-            print(f"Fehler beim Aufräumen alter Scan-Ergebnisse: {e}")
-
     def set_scan_mode(self, mode: str):
         """Setzt den Scan-Modus für den BACnet-Client"""
         self.bacnet_client.set_scan_mode(mode)

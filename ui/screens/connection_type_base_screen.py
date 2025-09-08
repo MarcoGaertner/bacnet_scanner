@@ -133,6 +133,7 @@ class ConnectionTypeBaseScreen(BaseScreen):
         """Wird aufgerufen, wenn der 'Weiter'-Button geklickt wird (in Unterklassen zu überschreiben)"""
         # Standardmäßig zur Geräte-Seite wechseln
         app = self.get_root_window().children[0]
+        app = App.get_running_app()
         app.root.ids.screen_manager.current = 'geräte'
     
     def on_language_changed(self, instance, language_code):

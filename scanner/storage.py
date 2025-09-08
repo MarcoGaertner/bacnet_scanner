@@ -53,6 +53,44 @@ class DatabaseStorage:
             FOREIGN KEY (scan_id) REFERENCES scans (scan_id) ON DELETE CASCADE
         )
         ''')
+
+        device_cols = [r[1] for r in cursor.execute("PRAGMA table_info(devices)").fetchall()]
+        
+        new_device_columns = {
+            "device_name": "TEXT",
+            "device_type": "TEXT",
+            "location": "TEXT",
+            "firmware_version": "TEXT",
+            "serial_number": "TEXT",
+            "network_number": "INTEGER",
+            "device_model": "TEXT",
+            "model_info": "TEXT",
+            "application_sw_version": "TEXT",
+            "operational_url": "TEXT",
+            "mac_address": "TEXT",
+            "device_description": "TEXT",
+            "local_date": "TEXT",
+            "local_time": "TEXT",
+            "firmware_revision_serial_number": "TEXT",
+            "ipv4": "TEXT",
+            "subnet_mask": "TEXT",
+            "router": "TEXT",
+            "udp_port": "INTEGER"
+        }
+        
+        
+        object_cols = [r[1] for r in cursor.execute("PRAGMA table_info(objects)").fetchall()]
+
+        new_object_columns = {
+            "object_description": "TEXT",
+            "object_location": "TEXT"
+        }
+
+
+        for col_name, col_type in new_device_columns.items():
+            if col_name not in device_cols:
+                cursor.execute(f"ALTER TABLE devices ADD COLUMN {col_name} {col_type}")
+                print(f"Added column '{col_name}' to 'devices' table.")
         
         # Objekt-Tabelle für detaillierte Objektdaten
         cursor.execute('''
@@ -78,7 +116,7 @@ class DatabaseStorage:
         
         print(f"Datenbank initialisiert: {self.db_path}")
     
-    def save_scan_result(self, scan_result: Dict[str, Any], description: str = "", connection_info: Dict[str, Any] = None, user_info: Dict[str, Any] = None,  ) -> int:
+    def save_scan_result(self, scan_result: Dict[str, Any], description: str = "", connection_info: Dict[str, Any] = None, user_info: Dict[str, Any] = None) -> int:
         """
         Speichert das Scan-Ergebnis in der Datenbank
         
@@ -86,6 +124,7 @@ class DatabaseStorage:
             scan_result: Das Scan-Ergebnis als Dictionary
             description: Eine Beschreibung des Scans
             connection_info: Informationen zur Verbindung (optional)
+            user_info: Benutzerinformationen (optional)
             
         Returns:
             Die ID des gespeicherten Scans
@@ -118,11 +157,14 @@ class DatabaseStorage:
                 properties = device.get("properties", {}).copy()
                 objects = properties.pop("objects", []) if "objects" in properties else []
                 
+                # Properties für JSON-Serialisierung bereinigen
+                cleaned_properties = self._clean_properties_for_json(properties)
+                
                 # Gerät speichern
                 cursor.execute('''
                 INSERT INTO devices (device_id, scan_id, address, properties)
                 VALUES (?, ?, ?, ?)
-                ''', (device_id, scan_id, address, json.dumps(properties)))
+                ''', (device_id, scan_id, address, json.dumps(cleaned_properties)))
                 
                 # Objekte speichern
                 for obj in objects:
@@ -137,13 +179,16 @@ class DatabaseStorage:
                     if "present-value" in additional_props:
                         present_value = str(additional_props.pop("present-value"))
                     
+                    # Zusätzliche Properties für JSON bereinigen
+                    cleaned_additional_props = self._clean_properties_for_json(additional_props)
+                    
                     cursor.execute('''
                     INSERT INTO objects (object_id, device_id, scan_id, object_type, object_instance, 
                                         object_name, present_value, additional_properties)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     ''', (
                         obj_id, device_id, scan_id, obj_type, obj_instance,
-                        obj_name, present_value, json.dumps(additional_props)
+                        obj_name, present_value, json.dumps(cleaned_additional_props)
                     ))
             
             conn.commit()
@@ -159,6 +204,91 @@ class DatabaseStorage:
             
         finally:
             conn.close()
+
+    def _clean_properties_for_json(self, properties: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Bereinigt Properties für JSON-Serialisierung
+        
+        Args:
+            properties: Dictionary mit Properties
+            
+        Returns:
+            Bereinigtes Dictionary, das JSON-serialisierbar ist
+        """
+        cleaned = {}
+        
+        for key, value in properties.items():
+            try:
+                # ERSTE PRIORITÄT: Versuche direkte JSON-Serialisierung
+                json.dumps(value)
+                cleaned[key] = value
+            except (TypeError, ValueError):
+                # ZWEITE PRIORITÄT: Konvertiere zu String
+                try:
+                    # Spezielle Behandlung für BACnet-Objekte
+                    if hasattr(value, '__dict__'):
+                        # Wenn es ein Objekt ist, versuche zuerst str()
+                        str_value = str(value)
+                        # Prüfe, ob es ein sinnvoller String ist (nicht nur Objektreferenz)
+                        if not str_value.startswith('<') and len(str_value.strip()) > 0:
+                            cleaned[key] = str_value
+                        else:
+                            # Fallback: Versuche Attribute zu extrahieren
+                            if hasattr(value, 'dict') and callable(getattr(value, 'dict')):
+                                cleaned[key] = value.dict()
+                            else:
+                                # Extrahiere öffentliche Attribute
+                                obj_dict = {}
+                                for attr_name, attr_value in value.__dict__.items():
+                                    if not attr_name.startswith('_'):
+                                        try:
+                                            json.dumps(attr_value)
+                                            obj_dict[attr_name] = attr_value
+                                        except (TypeError, ValueError):
+                                            obj_dict[attr_name] = str(attr_value)
+                                cleaned[key] = obj_dict if obj_dict else str(value)
+                    elif isinstance(value, (list, tuple)):
+                        # Listen/Tupel - bereinige jedes Element
+                        cleaned_list = []
+                        for item in value:
+                            try:
+                                json.dumps(item)
+                                cleaned_list.append(item)
+                            except (TypeError, ValueError):
+                                if hasattr(item, '__dict__'):
+                                    str_item = str(item)
+                                    if not str_item.startswith('<') and len(str_item.strip()) > 0:
+                                        cleaned_list.append(str_item)
+                                    else:
+                                        # Objekt in der Liste - extrahiere Attribute
+                                        if hasattr(item, 'dict') and callable(getattr(item, 'dict')):
+                                            cleaned_list.append(item.dict())
+                                        else:
+                                            item_dict = {}
+                                            for attr_name, attr_value in item.__dict__.items():
+                                                if not attr_name.startswith('_'):
+                                                    try:
+                                                        json.dumps(attr_value)
+                                                        item_dict[attr_name] = attr_value
+                                                    except (TypeError, ValueError):
+                                                        item_dict[attr_name] = str(attr_value)
+                                            cleaned_list.append(item_dict if item_dict else str(item))
+                                else:
+                                    cleaned_list.append(str(item))
+                        cleaned[key] = cleaned_list
+                    elif isinstance(value, dict):
+                        # Verschachtelte Dictionaries rekursiv bereinigen
+                        cleaned[key] = self._clean_properties_for_json(value)
+                    else:
+                        # Einfache Konvertierung zu String
+                        cleaned[key] = str(value)
+                        
+                except Exception as e:
+                    # Absoluter Fallback: Konvertiere zu String
+                    print(f"WARNING: Konnte Property '{key}' nicht bereinigen: {e}")
+                    cleaned[key] = str(value)
+            
+        return cleaned
     
     def get_scan_list(self, limit: int = 100) -> List[Dict[str, Any]]:
         """
@@ -191,8 +321,10 @@ class DatabaseStorage:
                         d["user_info"] = json.loads(d["user_info"])
                     except Exception:
                         d["user_info"] = {}
+                else:
+                    d["user_info"] = {}
                 
-                scans.append(dict(row))
+                scans.append(d)  # Verwende d statt dict(row)
             
             return scans
             

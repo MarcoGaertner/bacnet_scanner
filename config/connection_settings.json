@@ -1,30 +1,15 @@
 {
-    "connection": {
-        "type": "network",
-        "device_ap": {
-            "device_address": ""
-        },
-        "network": {
-            "adapter": "Ethernet 4",
-            "network_number": "",
-            "udp_port": "BAC0 (47808)",
-            "foreign_device": false,
-            "bbmd_ip": "",
-            "bbmd_port": "BAC0 (47808)",
-            "bbmd_network": "",
-            "ip_address": "172.16.13.175"
-        },
-        "mstp": {
-            "com_port": "COM1",
-            "baud_rate": "38400",
-            "mac_address": "0"
-        },
-        "usb": {
-            "device": ""
-        },
-        "secure": {
-            "server_url": "",
-            "certificate": "Kein Zertifikat (Anonym)"
-        }
+  "connection": {
+    "type": "network",
+    "network": {
+      "adapter": "Ethernet 4",
+      "ip_address": "172.16.13.120",
+      "network_number": "",
+      "udp_port": "47808",
+      "foreign_device": false,
+      "bbmd_ip": "",
+      "bbmd_port": "BAC0 (47808)",
+      "bbmd_network": ""
     }
+  }
 }

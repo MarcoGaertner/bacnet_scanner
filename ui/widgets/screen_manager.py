@@ -14,6 +14,7 @@ from ui.screens.trend_screen import TrendScreen
 from ui.screens.help_screen import HelpScreen
 from ui.screens.info_screen import InfoScreen
 from ui.screens.device_details_screen import DeviceDetailsScreen
+from ui.screens.network_screen import NetworkScreen
 
 Builder.load_file('ui/widgets/screen_manager.kv')
 
@@ -46,6 +47,7 @@ class AppScreenManager(ScreenManager):
         self.add_widget(HelpScreen(name='hilfe'))
         self.add_widget(InfoScreen(name='info')) 
         self.add_widget(DeviceDetailsScreen(name="device_details"))
+        self.add_widget(NetworkScreen(name='network'))
         
         # Reagiere auf Sprachänderungen
         event_bus.bind(on_language_changed=self.on_language_changed)

@@ -1,6 +1,10 @@
 import json
 import os
+import asyncio
 from pathlib import Path
+import threading
+from concurrent.futures import ThreadPoolExecutor
+import asyncio
 
 from ui.screens.connection_type_base_screen import ConnectionTypeBaseScreen
 from kivy.uix.boxlayout import BoxLayout
@@ -16,6 +20,7 @@ from ui.widgets.toggle_switch import ToggleSwitch
 from ui.widgets.hint_text_input import HintTextInput
 from kivy.app import App
 from kivy.clock import Clock
+from scanner.discovery import DeviceDiscovery
 
 # KV-Datei laden
 Builder.load_file('ui/screens/network_screen.kv')
@@ -30,6 +35,9 @@ class NetworkScreen(ConnectionTypeBaseScreen):
         super(NetworkScreen, self).__init__(**kwargs)
         # Lade die Netzwerkadapter beim Initialisieren
         self.network_adapters = self.load_network_adapters()
+        # Status Label für Scan-Feedback hinzufügen
+        self.status_label = None
+        self.scan_button = None
     
     def update_translations(self):
         """Aktualisiert die Übersetzungen"""
@@ -243,6 +251,17 @@ class NetworkScreen(ConnectionTypeBaseScreen):
         self.foreign_device_switch.bind(active=on_toggle_switch)
         print("DEBUG: 10. Toggle Switch Funktion gebunden")
 
+        # Status Label für Scan-Feedback hinzufügen
+        self.status_label = Label(
+            text="", 
+            color=ThemeColors.current["TEXT_COLOR"], 
+            size_hint_y=None, 
+            height=dp(30), 
+            halign='center', 
+            valign='middle'
+        )
+        self.status_label.bind(size=lambda instance, value: setattr(instance, 'text_size', value))
+
         # Füge Widgets zum Hauptcontainer hinzu
         main_container.add_widget(step1_label)
         main_container.add_widget(network_panel)
@@ -251,6 +270,7 @@ class NetworkScreen(ConnectionTypeBaseScreen):
         main_container.add_widget(udp_port_panel)
         main_container.add_widget(foreign_device_layout)
         main_container.add_widget(self.foreign_device_panel)
+        main_container.add_widget(self.status_label)  # Status Label hinzufügen
         print("DEBUG: 11. Alle Widgets zum main_container hinzugefügt")
 
         # Event-Handler für Panel-Änderungen
@@ -298,8 +318,30 @@ class NetworkScreen(ConnectionTypeBaseScreen):
         app = App.get_running_app()
         app.root.ids.screen_manager.current = 'verbindung'
 
+    def save_connection_config(self, connection_type, config_data):
+        """Speichert die Verbindungskonfiguration für einen bestimmten Typ"""
+        if hasattr(self, 'config_manager') and self.config_manager:
+            self.config_manager.update_setting("connection", "type", connection_type)
+            
+            for key, value in config_data.items():
+                if connection_type not in self.config_manager.settings["connection"]:
+                    self.config_manager.settings["connection"][connection_type] = {}
+                self.config_manager.settings["connection"][connection_type][key] = value
+            
+            self.config_manager.save_settings()
+
     def on_next_button_clicked(self, instance):
         """Wird aufgerufen, wenn der 'Weiter'-Button geklickt wird"""
+        print("DEBUG: Next Button geklickt - starte Scan")
+        
+        # Button deaktivieren während des Scans
+        if hasattr(self, 'scan_button') and self.scan_button:
+            self.scan_button.disabled = True
+        
+        # Status anzeigen
+        if self.status_label:
+            self.status_label.text = _("connection.network.preparing_scan")  # "Preparing scan..."
+        
         try:
             # Aktuelle IP-Adresse des ausgewählten Adapters abrufen
             ip_address = self.ip_label.text if hasattr(self, 'ip_label') else ""
@@ -315,21 +357,178 @@ class NetworkScreen(ConnectionTypeBaseScreen):
                 "bbmd_network": self.bbmd_network_input.text if hasattr(self, 'bbmd_network_input') and self.foreign_device_switch.active else ""
             }
             
-            self.config_manager.save_connection_config("network", config_data)
-            print(f"DEBUG: Netzwerkkonfiguration gespeichert: {config_data}")
+            # Konfiguration speichern falls config_manager verfügbar ist
+            if hasattr(self, 'config_manager') and self.config_manager:
+                self.config_manager.save_connection_config("network", config_data)
+                print(f"DEBUG: Netzwerkkonfiguration gespeichert: {config_data}")
+            
+            # Scan in separatem Thread starten
+            def run_scan_in_thread():
+                # Neue Event Loop für diesen Thread erstellen
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    # Asynchronen Scan ausführen
+                    loop.run_until_complete(self._start_scan_async())
+                finally:
+                    loop.close()
+            
+            # Thread starten
+            scan_thread = threading.Thread(target=run_scan_in_thread, daemon=True)
+            scan_thread.start()
+            
         except Exception as e:
-            print(f"ERROR: Fehler beim Speichern der Netzwerkkonfiguration: {e}")
-        
-        app = App.get_running_app()
-        app.root.ids.screen_manager.current = 'geräte'
+            print(f"ERROR: Fehler beim Starten des Scans: {e}")
+            if self.status_label:
+                self.status_label.text = f"Fehler: {e}"
+            # Button wieder aktivieren bei Fehler
+            if hasattr(self, 'scan_button') and self.scan_button:
+                self.scan_button.disabled = False
 
-    def save_connection_config(self, connection_type, config_data):
-        """Speichert die Verbindungskonfiguration für einen bestimmten Typ"""
-        self.update_setting("connection", "type", connection_type)
+    def load_scan_results_to_devices_screen(self, scan_id):
+        """Lädt die Scan-Ergebnisse in den Devices Screen"""
+        def do_load_scan(dt):
+            try:
+                app = App.get_running_app()
+                screen_manager = app.root.ids.screen_manager
+                
+                # Devices Screen finden
+                devices_screen = None
+                try:
+                    devices_screen = screen_manager.get_screen('geräte')
+                except:
+                    # Fallback: Screen über Klassenname suchen
+                    for screen in screen_manager.screens:
+                        if screen.__class__.__name__ == 'DevicesScreen':
+                            devices_screen = screen
+                            break
+                
+                if devices_screen and hasattr(devices_screen, 'load_scan'):
+                    print(f"DEBUG: Lade Scan-Ergebnisse für Scan-ID {scan_id} in DevicesScreen")
+                    devices_screen.load_scan(scan_id)
+                    print("DEBUG: Scan-Ergebnisse erfolgreich geladen")
+                else:
+                    print("ERROR: DevicesScreen nicht gefunden oder load_scan Methode fehlt")
+                    
+            except Exception as e:
+                print(f"ERROR: Fehler beim Laden der Scan-Ergebnisse: {e}")
+                import traceback
+                traceback.print_exc()
         
-        for key, value in config_data.items():
-            if connection_type not in self.settings["connection"]:
-                self.settings["connection"][connection_type] = {}
-            self.settings["connection"][connection_type][key] = value
+        # Im Hauptthread ausführen
+        Clock.schedule_once(do_load_scan, 0)
+
+    async def _start_scan_async(self):
+        """Asynchrone Methode zum Starten des Scans"""
+        def update_status(text):
+            # UI-Updates müssen im Hauptthread erfolgen
+            Clock.schedule_once(lambda dt: setattr(self.status_label, 'text', text) if self.status_label else None, 0)
         
-        self.save_settings()
+        def enable_button():
+            # Button im Hauptthread wieder aktivieren
+            Clock.schedule_once(lambda dt: setattr(self.scan_button, 'disabled', False) if hasattr(self, 'scan_button') and self.scan_button else None, 0)
+        
+        def navigate_to_devices_with_results(scan_id):
+            # Navigation und Laden der Ergebnisse im Hauptthread
+            def do_navigate_and_load(dt):
+                try:
+                    app = App.get_running_app()
+                    app.root.ids.screen_manager.current = 'geräte'
+                    print("DEBUG: Navigation zu 'geräte' erfolgreich")
+                    
+                    # Scan-Ergebnisse laden (mit kleiner Verzögerung für Navigation)
+                    Clock.schedule_once(lambda dt2: self.load_scan_results_to_devices_screen(scan_id), 0.1)
+                    
+                except Exception as e:
+                    print(f"ERROR: Fehler bei Navigation und Laden: {e}")
+            
+            Clock.schedule_once(do_navigate_and_load, 0)
+        
+        update_status(_("connection.network.scanning_in_progress"))  # "Scanning in progress..."
+        
+        try:
+            # Save current config to connection_settings.json
+            ip_address = self.ip_label.text if hasattr(self, 'ip_label') else ""
+            udp_port_str = self.udp_port_dropdown.current_value if hasattr(self, 'udp_port_dropdown') else "BAC0 (47808)"
+            
+            # Extract port number from string like "BAC0 (47808)"
+            udp_port = 47808
+            if "(" in udp_port_str and ")" in udp_port_str:
+                try:
+                    udp_port = int(udp_port_str.split("(")[1].split(")")[0])
+                except ValueError:
+                    pass  # Keep default 47808
+            else:
+                try:
+                    udp_port = int(udp_port_str)
+                except ValueError:
+                    pass  # Keep default 47808
+
+            config_data = {
+                "adapter": self.adapter_dropdown.current_value if hasattr(self, 'adapter_dropdown') else "Ethernet",
+                "ip_address": ip_address,
+                "network_number": self.network_number_input.text if hasattr(self, 'network_number_input') else "",
+                "udp_port": str(udp_port),  # Ensure it's stored as string or int, consistent with usage
+                "foreign_device": self.foreign_device_switch.active if hasattr(self, 'foreign_device_switch') else False,
+                "bbmd_ip": self.bbmd_ip_input.text if hasattr(self, 'bbmd_ip_input') and self.foreign_device_switch.active else "",
+                "bbmd_port": self.bbmd_port_dropdown.current_value if hasattr(self, 'bbmd_port_dropdown') and self.foreign_device_switch.active else "BAC0 (47808)",
+                "bbmd_network": self.bbmd_network_input.text if hasattr(self, 'bbmd_network_input') and self.foreign_device_switch.active else ""
+            }
+            
+            # Get the path to connection_settings.json
+            base_dir = Path(os.path.dirname(os.path.abspath(__file__))).parent.parent
+            config_file_path = base_dir / "config" / "connection_settings.json"
+            
+            # Ensure config directory exists
+            os.makedirs(config_file_path.parent, exist_ok=True)
+
+            # Save the config to the file
+            with open(config_file_path, 'w', encoding='utf-8') as f:
+                json.dump({"connection": {"type": "network", "network": config_data}}, f, indent=2)
+            print(f"DEBUG: Netzwerkkonfiguration für Scan gespeichert in: {config_file_path}")
+
+            # Initialize DeviceDiscovery with the saved config path
+            discovery = DeviceDiscovery(config_path=str(config_file_path))
+            
+            # Set scan mode to 'full' for UI initiated scans
+            discovery.set_scan_mode('full')
+            
+            # Perform the scan
+            scan_result = await discovery.discover_devices()
+            
+            if "error" in scan_result:
+                update_status(_("connection.network.scan_error") + f": {scan_result['error']}")  # "Scan Error"
+                print(f"ERROR: Scan failed: {scan_result['error']}")
+            else:
+                device_count = scan_result.get('device_count', 0)
+                scan_id = scan_result.get('scan_id')  # Scan-ID aus dem Ergebnis extrahieren
+                
+                update_status(_("connection.network.scan_complete") + f": {device_count} " + _("connection.network.devices_found"))  # "Scan Complete"
+                print(f"DEBUG: Scan completed: {device_count} devices found. Scan-ID: {scan_id}")
+                
+                if scan_id:
+                    # Navigation mit Scan-Ergebnissen
+                    navigate_to_devices_with_results(scan_id)
+                else:
+                    print("WARNING: Keine Scan-ID im Ergebnis gefunden")
+                    # Fallback: Normale Navigation ohne Ergebnisse
+                    def do_navigate(dt):
+                        app = App.get_running_app()
+                        app.root.ids.screen_manager.current = 'geräte'
+                    Clock.schedule_once(do_navigate, 0)
+                
+        except Exception as e:
+            update_status(_("connection.network.scan_exception") + f": {e}")  # "Scan Exception"
+            print(f"ERROR: Exception during scan: {e}")
+            import traceback
+            traceback.print_exc()
+        finally:
+            # Button wieder aktivieren
+            enable_button()
+            
+            # Clear status label after a short delay if there was an error
+            def clear_error_status(dt):
+                if self.status_label and (self.status_label.text.startswith(_("connection.network.scan_error")) or self.status_label.text.startswith(_("connection.network.scan_exception"))):
+                    self.status_label.text = ''
+            
+            Clock.schedule_once(clear_error_status, 5)  # Clear error message after 5 seconds
