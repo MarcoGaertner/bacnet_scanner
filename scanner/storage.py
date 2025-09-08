@@ -32,8 +32,15 @@ class DatabaseStorage:
             device_count INTEGER,
             description TEXT,
             connection_info TEXT  -- JSON-serialisierte Verbindungsinfo
+            -- user_info kommt per Migration dazu
         )
         ''')
+        
+        # --- Migration: user_info-Spalte nachrüsten, falls nicht vorhanden ---
+        cursor.execute("PRAGMA table_info(scans)")
+        cols = [r[1] for r in cursor.fetchall()]
+        if "user_info" not in cols:
+            cursor.execute("ALTER TABLE scans ADD COLUMN user_info TEXT")
         
         # Geräte-Tabelle
         cursor.execute('''
@@ -71,7 +78,7 @@ class DatabaseStorage:
         
         print(f"Datenbank initialisiert: {self.db_path}")
     
-    def save_scan_result(self, scan_result: Dict[str, Any], description: str = "", connection_info: Dict[str, Any] = None) -> int:
+    def save_scan_result(self, scan_result: Dict[str, Any], description: str = "", connection_info: Dict[str, Any] = None, user_info: Dict[str, Any] = None,  ) -> int:
         """
         Speichert das Scan-Ergebnis in der Datenbank
         
@@ -89,14 +96,15 @@ class DatabaseStorage:
         try:
             # Scan-Metadaten speichern
             cursor.execute('''
-            INSERT INTO scans (timestamp, scan_mode, device_count, description, connection_info)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO scans (timestamp, scan_mode, device_count, description, connection_info, user_info)
+            VALUES (?, ?, ?, ?, ?, ?)
             ''', (
                 scan_result.get("timestamp", datetime.datetime.now().isoformat()),
                 scan_result.get("scan_mode", "standard"),
                 scan_result.get("device_count", 0),
                 description,
-                json.dumps(connection_info) if connection_info else None
+                json.dumps(connection_info) if connection_info else None,
+                json.dumps(user_info) if user_info else None,
             ))
             
             scan_id = cursor.lastrowid
@@ -168,7 +176,7 @@ class DatabaseStorage:
         
         try:
             cursor.execute('''
-            SELECT scan_id, timestamp, scan_mode, device_count, description
+            SELECT scan_id, timestamp, scan_mode, device_count, description, user_info
             FROM scans
             ORDER BY timestamp DESC
             LIMIT ?
@@ -176,6 +184,14 @@ class DatabaseStorage:
             
             scans = []
             for row in cursor.fetchall():
+                d = dict(row)
+                # JSON felder de-serialisieren
+                if d.get("user_info"):
+                    try:
+                        d["user_info"] = json.loads(d["user_info"])
+                    except Exception:
+                        d["user_info"] = {}
+                
                 scans.append(dict(row))
             
             return scans

@@ -2,6 +2,7 @@
     "ui": {
         "language": "englisch",
         "theme": "hell",
-        "units": "imperial"
+        "units": "imperial",
+        "": ""
     }
 }

@@ -1,35 +1,26 @@
 #:import colors ui.styles.colors
 #:import dp kivy.metrics.dp
 
-<DeviceRow>:
+<KVRow@BoxLayout>:
+    key: ""
+    value: ""
     size_hint_y: None
-    height: dp(48)
-    padding: [dp(10), 0, dp(10), 0]
-    spacing: dp(10)
-    canvas.before:
-        Color:
-            rgba: colors.CARD_BACKGROUND if self.index % 2 else colors.TAB_BACKGROUND
-        Rectangle:
-            pos: self.pos
-            size: self.size
-
-    # Name fett
+    height: dp(36)
+    spacing: dp(8)
     Label:
-        markup: True
-        text: '[b]'+root.name+'[/b]'
+        text: root.key
         color: colors.TEXT_COLOR
         halign: 'left'
         valign: 'middle'
         text_size: self.size
-    # Device-ID
     Label:
-        text: 'ID: '+str(root.device_id)
+        text: root.value
         color: colors.get_color_with_alpha("TEXT_COLOR", 0.85)
         halign: 'left'
         valign: 'middle'
         text_size: self.size
 
-<DevicesScreen>:
+<DeviceDetailsScreen>:
     canvas.before:
         Color:
             rgba: colors.TAB_BACKGROUND
@@ -43,17 +34,17 @@
         spacing: dp(12)
 
         Label:
-            text: "Geräte"
-            font_size: dp(24)
+            markup: True
+            text: "[b]"+root.device_name+"[/b]"
+            font_size: dp(22)
             color: colors.TEXT_COLOR
             size_hint_y: None
             height: dp(40)
             halign: 'left'
             text_size: self.size
 
-        # Optional: Scan-ID anzeigen
         Label:
-            text: "Scan #"+str(root.scan_id) if root.scan_id else ""
+            text: "Device-ID: "+str(root.device_id) + ("   |   "+root.address if root.address else "")
             color: colors.get_color_with_alpha("TEXT_COLOR", 0.75)
             size_hint_y: None
             height: dp(24)
@@ -64,10 +55,11 @@
             do_scroll_x: False
             bar_width: dp(6)
             GridLayout:
-                id: device_list_container
-                cols: 1
+                id: details_container
+                cols: 2
                 size_hint_y: None
                 height: self.minimum_height
                 width: self.parent.width
                 size_hint_x: 1
-                spacing: dp(2)
+                row_default_height: dp(30)
+                spacing: dp(6)

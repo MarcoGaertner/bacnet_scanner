@@ -1,4 +1,40 @@
 #:import colors ui.styles.colors
+#:import dp kivy.metrics.dp
+
+<ScanRow>:
+    size_hint_y: None
+    height: dp(40)
+    spacing: dp(12)
+    padding: [dp(8), 0, dp(8), 0]
+
+    canvas.before:
+        Color:
+            rgba: colors.CARD_BACKGROUND if self.index % 2 else colors.TAB_BACKGROUND
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    Label:
+        text: root.date
+        color: colors.TEXT_COLOR
+        halign: 'left'
+        valign: 'middle'
+        text_size: self.size
+
+    Label:
+        text: root.time
+        color: colors.get_color_with_alpha("TEXT_COLOR", 0.75)
+        halign: 'left'
+        valign: 'middle'
+        text_size: self.size
+
+    Label:
+        text: root.user_display
+        color: colors.HIGHLIGHT_COLOR
+        halign: 'left'
+        valign: 'middle'
+        text_size: self.size
+
 
 <FilesScreen>:
     canvas.before:
@@ -7,18 +43,53 @@
         Rectangle:
             pos: self.pos
             size: self.size
-    
+
     BoxLayout:
         orientation: 'vertical'
         padding: dp(20)
-        
+        spacing: dp(12)
+
         Label:
-            text: "Dateien-Tab"
+            text: "Scans"
             font_size: dp(24)
-            color: colors.TEXT_PRIMARY
+            color: colors.TEXT_COLOR
             size_hint_y: None
             height: dp(40)
             halign: 'left'
             text_size: self.size
-        
-        Widget:  # Platzhalter für späteren Inhalt
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(32)
+            padding: [dp(8), 0, dp(8), 0]
+            spacing: dp(12)
+            Label:
+                text: "Datum"
+                bold: True
+                color: colors.TEXT_COLOR
+            Label:
+                text: "Uhrzeit"
+                bold: True
+                color: colors.TEXT_COLOR
+            Label:
+                text: "Person"
+                bold: True
+                color: colors.TEXT_COLOR
+
+        ScrollView:
+            do_scroll_x: False
+            bar_width: dp(6)
+            GridLayout:
+                id: list_container
+                cols: 1
+                size_hint_y: None
+                height: self.minimum_height
+                width: self.parent.width
+                size_hint_x: 1
+                spacing: dp(2)
+
+        Button:
+            text: "Aktualisieren"
+            size_hint_y: None
+            height: dp(40)
+            on_release: root.refresh_scans()

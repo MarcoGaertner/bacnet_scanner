@@ -118,11 +118,32 @@ class DeviceDiscovery:
                 "adapter": adapter_name
             }
             
+            # --- User-Infos laden (aus config/user_settings.json) ---
+            user_info = {}
+            try:
+                base_dir = Path(os.path.dirname(os.path.abspath(__file__))).parent  # Projektwurzel
+                user_settings_path = base_dir / "config" / "user_settings.json"
+                if user_settings_path.exists():
+                    with open(user_settings_path, "r", encoding="utf-8") as f:
+                        raw = json.load(f) or {}
+                    # Erwartete Struktur: {"user": {"first_name": "...", "last_name": "...", "email": "...", "company": "..."}}
+                    u = raw.get("user", raw)
+                    user_info = {
+                        "first_name": u.get("first_name", ""),
+                        "last_name":  u.get("last_name", ""),
+                        "email":      u.get("email", ""),
+                        "company":    u.get("company", ""),
+                    }
+            except Exception as _e:
+                # still write scan without user_info
+                user_info = {}
+            
             # Scan-Ergebnis in der Datenbank speichern
             scan_id = self.storage.save_scan_result(
                 scan_result, 
                 description=f"BACnet/IP-Scan auf {ip_address}:{udp_port}", 
-                connection_info=connection_info
+                connection_info=connection_info,
+                user_info=user_info
             )
             
             # Alte Scans löschen, wenn mehr als 100 vorhanden sind
