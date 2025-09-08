@@ -1,0 +1,94 @@
+#:import colors ui.styles.colors
+#:import dp kivy.metrics.dp
+
+<ExportScreen>:
+    canvas.before:
+        Color:
+            rgba: colors.TAB_BACKGROUND
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(20)
+        spacing: dp(12)
+
+        # Kopf
+        BoxLayout:
+            size_hint_y: None
+            height: dp(40)
+            Label:
+                text: "Export"
+                font_size: dp(24)
+                color: colors.TEXT_COLOR
+                halign: 'left'
+                text_size: self.size
+            Button:
+                text: "Export-Einstellungen"
+                size_hint_x: None
+                width: dp(200)
+                on_release: root.open_settings()
+
+        # Formatwahl
+        BoxLayout:
+            size_hint_y: None
+            height: dp(40)
+            spacing: dp(8)
+            Label:
+                text: "Format:"
+                color: colors.TEXT_COLOR
+                size_hint_x: None
+                width: dp(80)
+            ToggleButton:
+                text: "CSV"
+                group: "fmt"
+                state: "down"
+                on_release: root.set_format_csv()
+            ToggleButton:
+                text: "Excel (XLSX)"
+                group: "fmt"
+                on_release: root.set_format_xlsx()
+            ToggleButton:
+                text: "PDF"
+                group: "fmt"
+                on_release: root.set_format_pdf()
+
+            Widget:
+                size_hint_x: 1
+            Button:
+                text: "Exportieren"
+                size_hint_x: None
+                width: dp(150)
+                on_release: root.export_now()
+
+        # Vorschau (Pseudo-PDF-Style: weißes Blatt mit Tabelle)
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_y: 1
+            padding: dp(10)
+            canvas.before:
+                Color:
+                    rgba: 1,1,1,1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
+            Label:
+                text: "Vorschau"
+                color: colors.TEXT_COLOR
+                size_hint_y: None
+                height: dp(24)
+                halign: 'left'
+                text_size: self.size
+
+            ScrollView:
+                bar_width: dp(6)
+                do_scroll_x: True
+                do_scroll_y: True
+                GridLayout:
+                    id: preview_grid
+                    cols: 1
+                    size_hint_y: None
+                    height: self.minimum_height
+                    spacing: dp(2)

@@ -125,5 +125,30 @@ class DevicesScreen(BaseScreen):
         sm.current = details.name
 
 
+    def open_export_screen(self, *_):
+        # 1) Nimm den ScreenManager des aktuellen Screens
+        sm = self.manager
+        if not sm:
+            print("Kein ScreenManager gefunden.")
+            return
+
+        # 2) ExportScreen besorgen (erst Name 'export', dann Fallback Klassenname)
+        try:
+            screen = sm.get_screen("export")
+        except Exception:
+            screen = None
+            for sc in sm.screens:
+                if sc.__class__.__name__ == "ExportScreen":
+                    screen = sc
+                    break
+
+        if not screen:
+            print("ExportScreen nicht im ScreenManager gefunden.")
+            return
+
+        # 3) Kontext setzen + navigieren
+        screen.load_for_scan(int(self.scan_id))
+        sm.current = screen.name
+
 # NACH den Klassen laden
 Builder.load_file('ui/screens/devices_screen.kv')

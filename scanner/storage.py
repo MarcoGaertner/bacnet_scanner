@@ -111,7 +111,20 @@ class DatabaseStorage:
         # Aktiviere Foreign Key Constraints
         cursor.execute("PRAGMA foreign_keys = ON")
         
+        # --- NEU: Export-Felder-Tabelle ---
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS export_properties (
+            key TEXT PRIMARY KEY,         -- interner Schlüssel (z.B. 'object-name', 'ipv4', 'udp_port', 'address_port' ...)
+            label TEXT NOT NULL,          -- Anzeigename (deutsch)
+            enabled INTEGER DEFAULT 1,    -- 1=standardmäßig exportieren
+            order_index INTEGER DEFAULT 0 -- Sortierung
+        )
+        ''')
+
+        
         conn.commit()
+        self._seed_export_properties()
+        
         conn.close()
         
         print(f"Datenbank initialisiert: {self.db_path}")
@@ -620,3 +633,72 @@ class DatabaseStorage:
             
         finally:
             conn.close()
+            
+            
+    def _seed_export_properties(self):
+        """Initiale Export-Felder anlegen (einmalig; vorhandene bleiben unberührt)."""
+        defaults = [
+            # Core-Felder direkt aktiv
+            {"key": "object-name", "label": "Name", "enabled": 1, "order": 10},
+            {"key": "location", "label": "Ort", "enabled": 1, "order": 20},
+            {"key": "model-name", "label": "Gerätemodell", "enabled": 1, "order": 30},
+            {"key": "firmware-revision", "label": "Firmwareversion", "enabled": 1, "order": 40},
+            {"key": "address_port", "label": "Adresse + Port", "enabled": 1, "order": 50},
+            {"key": "device_id", "label": "Geräteinstanznr.", "enabled": 1, "order": 60},
+            {"key": "application-software-version", "label": "SW Version Applikation", "enabled": 1, "order": 70},
+            {"key": "description", "label": "Beschreibung", "enabled": 1, "order": 80},
+            {"key": "local-date", "label": "lokales Datum", "enabled": 0, "order": 90},
+            {"key": "local-time", "label": "lokale Zeit", "enabled": 0, "order": 100},
+            {"key": "ipv4", "label": "IPv4", "enabled": 1, "order": 110},
+            {"key": "subnet_mask", "label": "Subnetzmaske", "enabled": 1, "order": 120},
+            {"key": "router", "label": "Router", "enabled": 0, "order": 130},
+            {"key": "udp_port", "label": "Udp port", "enabled": 1, "order": 140},
+
+            # Weitere (standardmäßig aus; in den Settings zuschaltbar)
+            {"key": "device-type", "label": "Gerätetyp", "enabled": 0, "order": 200},
+            {"key": "serial-number", "label": "Seriennummer", "enabled": 0, "order": 210},
+            {"key": "network-number", "label": "Netzwerknummer", "enabled": 0, "order": 220},
+            {"key": "model-info", "label": "Modellinfo", "enabled": 0, "order": 230},
+            {"key": "operational-url", "label": "Betriebsurl", "enabled": 0, "order": 240},
+            {"key": "mac-address", "label": "Mac Adresse", "enabled": 0, "order": 250},
+            {"key": "instance", "label": "Instanz", "enabled": 0, "order": 260},
+            {"key": "standort", "label": "Standort", "enabled": 0, "order": 270},
+            {"key": "firmware_revision_serial_number", "label": "firmware revisioseriennummer", "enabled": 0, "order": 280},
+            {"key": "betriebs_url_dup", "label": "Betriebs url", "enabled": 0, "order": 290},
+            # Duplikate sind absichtlich getrennte Keys; standardmäßig aus.
+        ]
+
+        conn = sqlite3.connect(self.db_path)
+        cur = conn.cursor()
+        for d in defaults:
+            cur.execute('''
+                INSERT OR IGNORE INTO export_properties (key, label, enabled, order_index)
+                VALUES (?, ?, ?, ?)
+            ''', (d["key"], d["label"], d["enabled"], d["order"]))
+        conn.commit()
+        conn.close()
+
+    def get_export_properties(self) -> List[Dict[str, Any]]:
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        cur.execute('SELECT key, label, enabled, order_index FROM export_properties ORDER BY order_index, label')
+        rows = [dict(r) for r in cur.fetchall()]
+        conn.close()
+        return rows
+
+    def set_export_properties(self, items: List[Dict[str, Any]]):
+        """items: [{key, label?, enabled, order_index?}]"""
+        conn = sqlite3.connect(self.db_path)
+        cur = conn.cursor()
+        for it in items:
+            cur.execute('''
+                INSERT INTO export_properties (key, label, enabled, order_index)
+                VALUES (?, COALESCE(?, (SELECT label FROM export_properties WHERE key=?)), ?, COALESCE(?, (SELECT order_index FROM export_properties WHERE key=?)))
+                ON CONFLICT(key) DO UPDATE SET enabled=excluded.enabled, label=COALESCE(excluded.label, export_properties.label), order_index=COALESCE(excluded.order_index, export_properties.order_index)
+            ''', (it["key"], it.get("label"), it["key"], int(it.get("enabled", 1)), it.get("order_index"), it["key"]))
+        conn.commit()
+        conn.close()
+
+    def get_enabled_export_keys(self) -> List[str]:
+        return [r["key"] for r in self.get_export_properties() if int(r["enabled"]) == 1]

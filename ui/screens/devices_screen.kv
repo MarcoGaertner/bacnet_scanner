@@ -71,3 +71,22 @@
                 width: self.parent.width
                 size_hint_x: 1
                 spacing: dp(2)
+
+    BoxLayout:
+        size_hint_y: None
+        height: dp(40)
+        spacing: dp(8)
+
+        Label:
+            text: "Geräte"
+            font_size: dp(24)
+            color: colors.TEXT_COLOR
+            size_hint_x: 1
+            halign: 'left'
+            text_size: self.size
+
+        Button:
+            text: "Exportieren"
+            size_hint_x: None
+            width: dp(160)
+            on_release: root.open_export_screen()
