@@ -5,6 +5,7 @@ from xml.sax.saxutils import escape as xml_escape
 import os
 import json
 from datetime import datetime
+from pathlib import Path  # <-- NEU
 
 from .common import ensure_dir_for
 
@@ -18,14 +19,7 @@ def export_pdf(path: str,
                logo_path: str = "assets/siemens_logo.svg",
                user_info: Optional[Dict[str, Any]] = None,
                user_settings_path: Optional[str] = None):
-    """
-    Erzeugt eine tabellarische PDF (A4, quer), mehrseitig, mit wiederholtem Header.
-    Header-Inhalt: Siemens-Logo (SVG), Titel, User-Infos (aus user_settings.json), Datum/Uhrzeit.
 
-    - Schriftgröße wird dynamisch gewählt (10 -> 9 -> 8 -> 7).
-    - Jede Zelle hat max. 3 Zeilen (ansonsten ellipsieren).
-    - Keine Überlappung, keine abgeschnittenen Zeilen.
-    """
     ensure_dir_for(path)
 
     try:
@@ -33,44 +27,46 @@ def export_pdf(path: str,
         from reportlab.lib import colors as rl
         from reportlab.lib.styles import ParagraphStyle
         from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
-        from reportlab.lib.utils import ImageReader
     except ImportError as e:
         raise ImportError("Für PDF-Export wird 'reportlab' benötigt. Installiere z.B.: pip install reportlab") from e
 
     # ---- Setup -----------------------------------------------------------------
     pagesize = landscape(A4) if landscape_mode else portrait(A4)
-
-    # Platz für Header reservieren:
     HEADER_HEIGHT = 42  # pt
     doc = SimpleDocTemplate(
         path,
         pagesize=pagesize,
         leftMargin=24, rightMargin=24,
-        topMargin=28 + HEADER_HEIGHT,  # Header-Platz dazu
+        topMargin=28 + HEADER_HEIGHT,
         bottomMargin=28
     )
 
-    # User-Settings laden (falls nicht explizit übergeben)
+    # User-Settings laden
     if user_info is None:
         user_info = _load_user_settings(user_settings_path)
 
-    # Datum/Uhrzeit formatieren
+    # Datum/Uhrzeit
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    # --- LOGO-PFAD EINMALIG ROBUST AUFLÖSEN ------------------------------------
+    try:
+        resolved_logo_path = _resolve_logo_path(logo_path)
+        # Optional: Debugausgabe, damit du siehst, was benutzt wird
+        print(f"[PDF] Verwende Logo: {resolved_logo_path}")
+    except FileNotFoundError as e:
+        # Kein Fallback – nur klarer Log
+        print(f"[PDF] SVG-Logo nicht gefunden: {e}")
+        resolved_logo_path = None
 
     # ---- Styles & Helpers ------------------------------------------------------
     def make_styles(font_size: int):
+        from reportlab.lib.styles import ParagraphStyle
         leading = font_size + 2
-        base = ParagraphStyle(
-            'cell',
-            fontName='Helvetica',
-            fontSize=font_size,
-            leading=leading,
-            spaceBefore=0, spaceAfter=0
-        )
+        base = ParagraphStyle('cell', fontName='Helvetica', fontSize=font_size,
+                              leading=leading, spaceBefore=0, spaceAfter=0)
         head = ParagraphStyle('head', parent=base, fontName='Helvetica-Bold')
         return base, head
 
-    # verfügbare Tabellenbreite
     page_width = pagesize[0] - doc.leftMargin - doc.rightMargin
 
     def compute_col_widths(headers_: List[str], rows_: List[Dict[str, Any]], min_w=50, max_w=260):
@@ -103,7 +99,6 @@ def export_pdf(path: str,
         p = Paragraph(safe, style)
         if para_lines(p, col_w, style.leading) <= max_lines:
             return p
-        # binäres Kürzen
         lo, hi = 0, len(safe)
         best = "…"
         while lo < hi:
@@ -131,7 +126,6 @@ def export_pdf(path: str,
                     overflow += 1
         return overflow / max(1, total)
 
-    # ---- Schriftgröße bestimmen, Daten/Spaltenbreiten bauen --------------------
     candidate_sizes = [10, 9, 8, 7]
     col_widths = compute_col_widths(headers, rows)
     chosen_size = candidate_sizes[-1]
@@ -144,101 +138,123 @@ def export_pdf(path: str,
     head_row = [Paragraph(xml_escape(str(header_labels.get(h, h))), head_style) for h in headers]
     table_data = [head_row]
     for r in rows:
-        cells = []
-        for j, h in enumerate(headers):
-            cells.append(fit_paragraph(r.get(h, ""), base_style, col_widths[j], max_lines=3))
-        table_data.append(cells)
+        table_data.append([fit_paragraph(r.get(h, ""), base_style, col_widths[j], max_lines=3)
+                           for j, h in enumerate(headers)])
 
+    from reportlab.platypus import Table, TableStyle
+    from reportlab.lib import colors as rl
     tbl = Table(table_data, colWidths=col_widths, repeatRows=1, splitByRow=1)
     tbl.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), rl.HexColor("#EEEEEE")),
         ("TEXTCOLOR", (0, 0), (-1, 0), rl.black),
         ("VALIGN", (0, 0), (-1, 0), "MIDDLE"),
-
         ("VALIGN", (0, 1), (-1, -1), "MIDDLE"),
         ("GRID", (0, 0), (-1, -1), 0.25, rl.grey),
-
         ("LEFTPADDING",  (0, 0), (-1, -1), 3),
         ("RIGHTPADDING", (0, 0), (-1, -1), 3),
         ("TOPPADDING",   (0, 0), (-1, -1), 1),
         ("BOTTOMPADDING",(0, 0), (-1, -1), 1),
-
         ("ROWBACKGROUNDS", (0, 1), (-1, -1), [rl.whitesmoke, rl.white]),
     ]))
 
-    # ---- Header-Zeichner (auf jeder Seite) -------------------------------------
+    # ---- Header-Zeichner -------------------------------------------------------
     def draw_header(canv, doc_):
-        """
-        Zeichnet Logo links + Titel/User/Datum rechts in die Kopfzeile jeder Seite.
-        """
         canv.saveState()
         x_left = doc_.leftMargin
-        y_top = pagesize[1] - 18  # ein wenig Abstand zum Rand
+        y_top = pagesize[1] - 18
 
-        # 1) Logo links (SVG bevorzugt, Fallback PNG/JPG oder weglassen)
-        logo_drawn_w = 0
+        logo_drawn_w = 0.0
         try:
-            # Versuche SVG via svglib
-            if os.path.exists(logo_path) and logo_path.lower().endswith(".svg"):
-                try:
-                    from svglib.svglib import svg2rlg
-                    from reportlab.graphics import renderPDF
-                    drawing = svg2rlg(logo_path)
-                    # Zielhöhe ~ HEADER_HEIGHT - etwas Luft
-                    target_h = HEADER_HEIGHT - 10
-                    if drawing.height and drawing.width:
-                        scale = target_h / float(drawing.height)
-                        renderPDF.draw(drawing, canv, x_left, y_top - target_h)
-                        canv.translate(0, 0)
-                        canv.scale(scale, scale)
-                        # ACHTUNG: bessere Variante: vorher skalieren:
-                        canv.restoreState()
-                        canv.saveState()
-                        from reportlab.graphics.shapes import Drawing
-                        s = target_h / float(drawing.height)
-                        drawing.width *= s
-                        drawing.height *= s
-                        renderPDF.draw(drawing, canv, x_left, y_top - drawing.height)
-                        logo_drawn_w = drawing.width
-                    else:
-                        raise Exception("Ungültige SVG-Abmessungen")
-                except Exception:
-                    print("kein Logo gefudnen")
-                    # Fallback: ImageReader (PNG/JPG)
-                    _fallback_raster(canv, x_left, y_top, HEADER_HEIGHT, logo_path)
-                    logo_drawn_w = HEADER_HEIGHT * 2  # grobe Breite
-            else:
-                _fallback_raster(canv, x_left, y_top, HEADER_HEIGHT, logo_path)
-                logo_drawn_w = HEADER_HEIGHT * 2
-        except Exception:
-            # Logo weglassen, wenn gar nichts geht
-            logo_drawn_w = 0
+            if not resolved_logo_path:
+                raise FileNotFoundError(f"{logo_path}")
+            logo_drawn_w = _draw_svg_logo(canv, resolved_logo_path, x_left, y_top, target_h=HEADER_HEIGHT - 10)
+        except Exception as e:
+            print(f"[PDF] SVG-Logo konnte nicht gezeichnet werden: {e}")
+            logo_drawn_w = 0.0
 
-        # 2) Textblock rechts daneben
         left_x = x_left + (logo_drawn_w + 12 if logo_drawn_w else 0)
         right_x = pagesize[0] - doc_.rightMargin
-        text_w = right_x - left_x
 
         canv.setFont("Helvetica-Bold", 12)
         canv.drawString(left_x, y_top - 12, title)
 
         canv.setFont("Helvetica", 9)
-        # User-Infos (best effort)
         user_line = _compose_user_line(user_info)
         canv.drawString(left_x, y_top - 26, user_line)
         canv.drawRightString(right_x, y_top - 26, f"Erstellt am: {now_str}")
-
         canv.restoreState()
 
-    # ---- Story aufbauen & Dokument erzeugen ------------------------------------
-    story = [tbl]  # Titel ist im Header; hier nur die Tabelle
+    story = [tbl]
     doc.build(story, onFirstPage=draw_header, onLaterPages=draw_header)
 
 
-# ----------------------- Hilfsfunktionen (intern) --------------------------------
+# ----------------------- Hilfsfunktionen ----------------------------------------
+
+def _resolve_logo_path(logo_path: str) -> str:
+    """
+    Löst logo_path robust auf:
+    - absolute Pfade direkt
+    - relativ zu diesem Modul (../assets/…)
+    - relativ zum aktuellen Arbeitsverzeichnis (cwd)
+    - optional über Kivy resource_find
+    Gibt einen absoluten Pfad zurück oder wirft FileNotFoundError.
+    """
+    requested = Path(logo_path)
+
+    # 1) Bereits absolut oder relativ, aber existent?
+    if requested.is_file():
+        return str(requested.resolve())
+
+    # 2) relativ zu diesem File (exporter/pdf_exporter.py)
+    here = Path(__file__).resolve()
+    candidates = [
+        here.parent / logo_path,              # exporter/ + assets/...
+        here.parent.parent / logo_path,       # projektroot/ + assets/...
+        Path.cwd() / logo_path,               # aktuelles Arbeitsverzeichnis
+    ]
+
+    # 3) Kivy resource_find (falls verfügbar)
+    try:
+        from kivy.resources import resource_find
+        found = resource_find(logo_path)
+        if found:
+            candidates.append(Path(found))
+    except Exception:
+        pass
+
+    for c in candidates:
+        if c and Path(c).is_file():
+            return str(Path(c).resolve())
+
+    # Debug-Infos helfen beim Diagnostizieren
+    debug = f"cwd={Path.cwd()} | __file__={here} | geprüft={', '.join(str(p) for p in candidates)}"
+    raise FileNotFoundError(f"Logo nicht gefunden: {logo_path} | {debug}")
+
+
+def _draw_svg_logo(canv, logo_path: str, x_left: float, y_top: float, target_h: float) -> float:
+    """
+    SVG mit svglib laden, proportional auf target_h skalieren und zeichnen.
+    Gibt die gezeichnete Breite (pt) zurück.
+    """
+    from svglib.svglib import svg2rlg
+    from reportlab.graphics import renderPDF
+
+    drawing = svg2rlg(logo_path)
+    if drawing is None or not getattr(drawing, "width", None) or not getattr(drawing, "height", None):
+        raise ValueError("Ungültige SVG-Abmessungen")
+
+    orig_w = float(drawing.width)
+    orig_h = float(drawing.height)
+    if orig_h <= 0.0:
+        raise ValueError("SVG-Höhe ist 0")
+
+    scale = float(target_h) / orig_h
+    drawing.scale(scale, scale)
+    renderPDF.draw(drawing, canv, x_left, y_top - target_h)
+    return orig_w * scale
+
 
 def _compose_user_line(user_info: Optional[Dict[str, Any]]) -> str:
-    """Baut eine kompakte User-Zeile wie: 'User: Vorname Nachname (email@…)'."""
     if not user_info:
         return "User: unbekannt"
     first = (user_info.get("first_name") or "").strip()
@@ -255,7 +271,6 @@ def _compose_user_line(user_info: Optional[Dict[str, Any]]) -> str:
 
 
 def _load_user_settings(user_settings_path: Optional[str]) -> Dict[str, Any]:
-    """Versucht user_settings.json zu laden (mehrere Standardpfade)."""
     candidates = []
     if user_settings_path:
         candidates.append(user_settings_path)
@@ -272,34 +287,3 @@ def _load_user_settings(user_settings_path: Optional[str]) -> Dict[str, Any]:
         except Exception:
             pass
     return {}
-
-
-def _fallback_raster(canv, x_left: float, y_top: float, header_h: float, logo_path: str):
-    """
-    Versucht, eine Rastergrafik (PNG/JPG) zu zeichnen. Wenn die angegebene .svg
-    nicht geht, probieren wir ein PNG mit gleichem Namen als Fallback.
-    """
-    from reportlab.lib.utils import ImageReader
-    # Falls SVG angegeben, PNG im selben Ordner versuchen
-    path = logo_path
-    if not (path and os.path.exists(path)):
-        return
-    if path.lower().endswith(".svg"):
-        png = os.path.splitext(path)[0] + ".png"
-        if os.path.exists(png):
-            path = png
-        else:
-            # kein PNG-Fallback vorhanden
-            return
-    try:
-        img = ImageReader(path)
-        iw, ih = img.getSize()
-        if ih == 0:
-            return
-        scale = (header_h - 10) / float(ih)
-        draw_w = iw * scale
-        draw_h = ih * scale
-        canv.drawImage(img, x_left, y_top - draw_h, width=draw_w, height=draw_h, mask='auto')
-    except Exception:
-        # ignorieren, wenn Bild nicht darstellbar ist
-        pass
