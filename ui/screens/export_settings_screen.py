@@ -7,9 +7,8 @@ from kivy.uix.behaviors import ButtonBehavior
 from kivy.app import App
 
 from ui.screens.base_screen import BaseScreen
-
 from ui.styles import colors
-from scanner.storage import DatabaseStorage
+from core.config import ConfigManager  # Geändert von DatabaseStorage
 
 class FieldRow(BoxLayout):
     key = ""
@@ -24,11 +23,13 @@ class ExportSettingsScreen(BaseScreen):
     name = "export_settings"
     fields = ListProperty([])  # [{'key','label','enabled','order_index'}, ...]
 
-    def load_fields(self):
-        st = DatabaseStorage()
-        self.fields = st.get_export_properties()
-        self._render()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.config_manager = ConfigManager()
 
+    def load_fields(self):
+        self.fields = self.config_manager.get_export_properties()
+        self._render()
 
     def _render(self):
         cont = self.ids.get("fields_container")
@@ -68,7 +69,6 @@ class ExportSettingsScreen(BaseScreen):
             )
             line.add_widget(lbl_label)
             
-            
             # 3) Key – editierbar
             lbl_key = Label(
                 text=str(f.get("key", "")),
@@ -94,10 +94,10 @@ class ExportSettingsScreen(BaseScreen):
         if 0 <= index < len(self.fields):
             self.fields[index]["key"] = value
 
-
     def save_and_back(self):
-        st = DatabaseStorage()
-        st.set_export_properties(self.fields)
+        # Geändert: Verwende ConfigManager statt DatabaseStorage
+        self.config_manager.set_export_properties(self.fields)
+        
         # zurück zum ExportScreen und Vorschau aktualisieren
         sm = App.get_running_app().root
         try:

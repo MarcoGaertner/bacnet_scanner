@@ -12,6 +12,7 @@ from exporter.common import build_rows_for_scan
 from exporter.csv_exporter import export_csv
 from exporter.xlsx_exporter import export_xlsx
 from exporter.pdf_exporter import export_pdf
+from core.config import ConfigManager
 
 
 
@@ -82,16 +83,21 @@ class ExportScreen(BaseScreen):
                 "address_port": "Adresse + Port",
             })
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.config_manager = ConfigManager()
+
+
     # ---------- Daten laden und Vorschau rendern ----------
     def reload_from_settings(self):
-        storage = DatabaseStorage()
-        try:
-            props = storage.get_export_properties()
-        except Exception as e:
-            print(f"[ExportScreen DEBUG] get_export_properties() fehlgeschlagen: {e}")
-            props = []
-        self.headers = [p["key"] for p in props if int(p.get("enabled", 0)) == 1]
-        self.header_labels = {p["key"]: p.get("label", p["key"]) for p in props}
+        """Lädt headers aus Config und baut Vorschau neu."""
+        props = self.config_manager.get_export_properties()
+        enabled_props = [p for p in props if int(p.get("enabled", 0)) == 1]
+        enabled_props.sort(key=lambda x: int(x.get("order", 999)))
+        
+        self.headers = [p["key"] for p in enabled_props]
+        self.header_labels = {p["key"]: p["label"] for p in enabled_props}
+        
         self._debug_dump("reload_from_settings")
         self._build_preview()
 

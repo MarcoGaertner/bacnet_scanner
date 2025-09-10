@@ -2,6 +2,7 @@
 import os
 from typing import List, Dict, Any
 from scanner.storage import DatabaseStorage
+from core.config import ConfigManager
 
 def _extract_value(key: str, device: Dict[str, Any], props: Dict[str, Any]) -> Any:
     # 1) direkter Treffer in Props
@@ -38,7 +39,8 @@ def _extract_value(key: str, device: Dict[str, Any], props: Dict[str, Any]) -> A
     # 3) Fallback
     return props.get(key, "")
 
-def build_rows_for_scan(scan_id: int, selected_keys: List[str], storage: DatabaseStorage) -> List[Dict[str, Any]]:
+def build_rows_for_scan(scan_id: int, selected_keys: List[str], storage) -> List[Dict[str, Any]]:
+    # storage ist jetzt DatabaseStorage für Scan-Daten
     data = storage.get_scan_details(scan_id) or {}
     rows: List[Dict[str, Any]] = []
     for d in data.get("devices", []) or []:
@@ -47,9 +49,10 @@ def build_rows_for_scan(scan_id: int, selected_keys: List[str], storage: Databas
         rows.append(row)
     return rows
 
-def get_enabled_headers_and_labels(storage: DatabaseStorage) -> (List[str], Dict[str, str]):
-    """Liest export_properties aus der DB, liefert aktivierte Keys + Label-Mapping."""
-    props = storage.get_export_properties()
+def get_enabled_headers_and_labels() -> (List[str], Dict[str, str]):
+    """Liest export_properties aus der Config, liefert aktivierte Keys + Label-Mapping."""
+    config_manager = ConfigManager()
+    props = config_manager.get_export_properties()
     headers = [p["key"] for p in props if int(p["enabled"]) == 1]
     header_labels = {p["key"]: p["label"] for p in props}
     return headers, header_labels

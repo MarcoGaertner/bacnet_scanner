@@ -12,6 +12,7 @@ class ConfigManager:
         self.ui_config_file = self.config_dir / "ui_settings.json"
         self.user_config_file = self.config_dir / "user_settings.json"
         self.connection_config_file = self.config_dir / "connection_settings.json"
+        self.export_config_file = self.config_dir / "export_settings.json"
         
         # Standardeinstellungen
         self.default_settings = {
@@ -53,6 +54,35 @@ class ConfigManager:
                     "server_url": "",
                     "certificate": "Kein Zertifikat (Anonym)"
                 }
+            },
+            "export": {
+                "properties": [
+                    {"key": "object-name", "label": "Objektname", "enabled": 1, "order": 10},
+                    {"key": "local-date", "label": "lokales Datum", "enabled": 1, "order": 20},
+                    {"key": "model-name", "label": "Gerätemodell", "enabled": 1, "order": 30},
+                    {"key": "firmware-revision", "label": "Firmwareversion", "enabled": 1, "order": 40},
+                    {"key": "address_port", "label": "Adresse + Port", "enabled": 1, "order": 50},
+                    {"key": "device_id", "label": "Geräteinstanznr.", "enabled": 1, "order": 60},
+                    {"key": "application-software-version", "label": "SW Version Applikation", "enabled": 1, "order": 70},
+                    {"key": "description", "label": "Beschreibung", "enabled": 1, "order": 80},
+                    {"key": "local-date", "label": "lokales Datum", "enabled": 0, "order": 90},
+                    {"key": "local-time", "label": "lokale Zeit", "enabled": 0, "order": 100},
+                    {"key": "ipv4", "label": "IPv4", "enabled": 1, "order": 110},
+                    {"key": "subnet_mask", "label": "Subnetzmaske", "enabled": 1, "order": 120},
+                    {"key": "router", "label": "Router", "enabled": 0, "order": 130},
+                    {"key": "udp_port", "label": "Udp port", "enabled": 1, "order": 140},
+                    # Weitere Felder...
+                    {"key": "device-type", "label": "Gerätetyp", "enabled": 0, "order": 200},
+                    {"key": "serial-number", "label": "Seriennummer", "enabled": 0, "order": 210},
+                    {"key": "network-number", "label": "Netzwerknummer", "enabled": 0, "order": 220},
+                    {"key": "model-info", "label": "Modellinfo", "enabled": 0, "order": 230},
+                    {"key": "operational-url", "label": "Betriebsurl", "enabled": 0, "order": 240},
+                    {"key": "mac-address", "label": "Mac Adresse", "enabled": 0, "order": 250},
+                    {"key": "instance", "label": "Instanz", "enabled": 0, "order": 260},
+                    {"key": "standort", "label": "Standort", "enabled": 0, "order": 270},
+                    {"key": "firmware_revision_serial_number", "label": "firmware revisioseriennummer", "enabled": 0, "order": 280},
+                    {"key": "betriebs_url_dup", "label": "Betriebs url", "enabled": 0, "order": 290}
+                ]
             }
         }
         
@@ -95,6 +125,16 @@ class ConfigManager:
                         settings["connection"] = connection_settings["connection"]
             except Exception as e:
                 print(f"Fehler beim Laden der Verbindungs-Konfiguration: {e}")
+    
+        # Export-Einstellungen laden
+        if self.export_config_file.exists():
+            try:
+                with open(self.export_config_file, 'r', encoding='utf-8') as f:
+                    export_settings = json.load(f)
+                    if "export" in export_settings:
+                        settings["export"] = export_settings["export"]
+            except Exception as e:
+                print(f"Fehler beim Laden der Export-Konfiguration: {e}")
         
         return settings
     
@@ -128,6 +168,15 @@ class ConfigManager:
                 json.dump(connection_settings, f, indent=4, ensure_ascii=False)
         except Exception as e:
             print(f"Fehler beim Speichern der Verbindungs-Konfiguration: {e}")
+            return False
+        
+        # Export-Einstellungen speichern
+        try:
+            export_settings = {"export": settings.get("export", {})}
+            with open(self.export_config_file, 'w', encoding='utf-8') as f:
+                json.dump(export_settings, f, indent=4, ensure_ascii=False)
+        except Exception as e:
+            print(f"Fehler beim Speichern der Export-Konfiguration: {e}")
             return False
         
         return True
@@ -195,3 +244,18 @@ class ConfigManager:
         # Aktualisiere die Konfigurationsdaten
         for key, value in config_data.items():
             self.update_setting("connection", connection_type, value, key)
+
+    def get_export_properties(self):
+        """Gibt die Export-Properties zurück"""
+        return self.get_setting("export", "properties") or []
+    
+
+    def set_export_properties(self, properties):
+        """Setzt die Export-Properties"""
+        self.update_setting("export", "properties", properties)
+
+
+    def get_enabled_export_keys(self):
+        """Gibt die aktivierten Export-Keys zurück"""
+        properties = self.get_export_properties()
+        return [prop["key"] for prop in properties if int(prop.get("enabled", 0)) == 1]
