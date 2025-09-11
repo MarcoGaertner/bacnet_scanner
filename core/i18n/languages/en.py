@@ -114,5 +114,14 @@ translations = {
     "connection.secure.server_url_hint": "Enter server URL (ws:// or wss://)",
     "connection.secure.certificate": "Client Certificate",
     "connection.secure.select_certificate": "Select Certificate",
-    "connection.secure.no_certificate": "No Certificate (Anonymous)"
+    "connection.secure.no_certificate": "No Certificate (Anonymous)",
+
+    # Devices Screen
+    "devices.title": "Devices",
+    "devices.export": "Export",
+    "devices.search": "Search",
+    "devices.multiple_devices": "",
+    "devices.search_hint": "",
+    "devices.no_devices": "open a Scan",
+    "devices.no_results": "no devices found"
 }

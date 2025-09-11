@@ -84,7 +84,7 @@ class ConnectionScreen(BaseScreen):
         # Verbindungsdiagramm
         diagram_layout = BoxLayout(orientation='vertical', size_hint_y=None, height=dp(120))
         diagram = Image(
-            source='ui/assets/icons/connection_diagram.ico',
+            source='ui/assets/icons/connection_diagram.png',
             size_hint=(None, None),
             size=(dp(200), dp(100)),
             pos_hint={'center_x': 0.5}

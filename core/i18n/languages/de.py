@@ -114,5 +114,15 @@ translations = {
     "connection.secure.server_url_hint": "Server-URL eingeben (ws:// oder wss://)",
     "connection.secure.certificate": "Client-Zertifikat",
     "connection.secure.select_certificate": "Zertifikat auswählen",
-    "connection.secure.no_certificate": "Kein Zertifikat (Anonym)"
+    "connection.secure.no_certificate": "Kein Zertifikat (Anonym)",
+
+    # Devices Screen
+    "devices.title": "Geräte",
+    "devices.export": "Exportieren",
+    "devices.search": "Suche",
+    "devices.multiple_devices": "",
+    "devices.search_hint": "",
+    "devices.no_devices": "kein Scan geladen",
+    "devices.no_results": "keine Geräte gefunden"
+
 }

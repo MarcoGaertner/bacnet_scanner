@@ -1,9 +1,8 @@
+#:import ThemeColors ui.styles.colors.ThemeColors
 #:import colors ui.styles.colors
 #:import dp kivy.metrics.dp
 
 <DeviceRow>:
-    size_hint_y: None
-    height: dp(48)
     padding: [dp(10), 0, dp(10), 0]
     spacing: dp(10)
     canvas.before:
@@ -13,80 +12,54 @@
             pos: self.pos
             size: self.size
 
-    # Name fett
-    Label:
-        markup: True
-        text: '[b]'+root.name+'[/b]'
-        color: colors.TEXT_COLOR
-        halign: 'left'
-        valign: 'middle'
-        text_size: self.size
-    # Device-ID
-    Label:
-        text: 'ID: '+str(root.device_id)
-        color: colors.get_color_with_alpha("TEXT_COLOR", 0.85)
-        halign: 'left'
-        valign: 'middle'
-        text_size: self.size
+    BoxLayout:
+        orientation: 'vertical'
+        spacing: dp(2)
+        
+        # Hauptzeile mit Name und ID
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: dp(24)
+            
+            # Name fett
+            Label:
+                markup: True
+                text: '[b]'+root.name+'[/b]'
+                color: colors.TEXT_COLOR
+                halign: 'left'
+                valign: 'middle'
+                text_size: self.size
+                size_hint_x: 0.7
+            
+            # Device-ID
+            Label:
+                text: 'ID: '+str(root.device_id)
+                color: colors.get_color_with_alpha("TEXT_COLOR", 0.85)
+                halign: 'right'
+                valign: 'middle'
+                text_size: self.size
+                size_hint_x: 0.3
+        
+        # Zusätzliche Informationen (falls vorhanden)
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: dp(20) if root.description or root.location or root.address else dp(0)
+            opacity: 0.75
+            
+            Label:
+                text: (root.description + " | " if root.description else "") + (root.location + " | " if root.location else "") + (root.address if root.address else "")
+                color: colors.get_color_with_alpha("TEXT_COLOR", 0.7)
+                halign: 'left'
+                valign: 'middle'
+                text_size: self.size
+                font_size: dp(11)
 
 <DevicesScreen>:
     canvas.before:
         Color:
-            rgba: colors.TAB_BACKGROUND
+            rgba: ThemeColors.current["BACKGROUND"]
         Rectangle:
             pos: self.pos
             size: self.size
-
-    BoxLayout:
-        orientation: 'vertical'
-        padding: dp(20)
-        spacing: dp(12)
-
-        Label:
-            text: "Geräte"
-            font_size: dp(24)
-            color: colors.TEXT_COLOR
-            size_hint_y: None
-            height: dp(40)
-            halign: 'left'
-            text_size: self.size
-
-        # Optional: Scan-ID anzeigen
-        Label:
-            text: "Scan #"+str(root.scan_id) if root.scan_id else ""
-            color: colors.get_color_with_alpha("TEXT_COLOR", 0.75)
-            size_hint_y: None
-            height: dp(24)
-            halign: 'left'
-            text_size: self.size
-
-        ScrollView:
-            do_scroll_x: False
-            bar_width: dp(6)
-            GridLayout:
-                id: device_list_container
-                cols: 1
-                size_hint_y: None
-                height: self.minimum_height
-                width: self.parent.width
-                size_hint_x: 1
-                spacing: dp(2)
-
-    BoxLayout:
-        size_hint_y: None
-        height: dp(40)
-        spacing: dp(8)
-
-        Label:
-            text: "Geräte"
-            font_size: dp(24)
-            color: colors.TEXT_COLOR
-            size_hint_x: 1
-            halign: 'left'
-            text_size: self.size
-
-        Button:
-            text: "Exportieren"
-            size_hint_x: None
-            width: dp(160)
-            on_release: root.open_export_screen()
