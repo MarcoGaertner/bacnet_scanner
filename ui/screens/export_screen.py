@@ -1,11 +1,18 @@
-# ui/screens/export_screen.py
 from typing import List, Dict
-from kivy.lang import Builder
-from kivy.properties import NumericProperty, ListProperty, StringProperty, DictProperty
-from kivy.app import App
-from ui.styles import colors
 import os
+from datetime import datetime
 
+from kivy.lang import Builder
+from kivy.properties import NumericProperty, ListProperty, StringProperty, DictProperty, ObjectProperty
+from kivy.app import App
+from kivy.clock import Clock
+from kivy.metrics import dp
+from kivy.uix.behaviors import ButtonBehavior
+from kivy.uix.image import Image
+from kivy.resources import resource_find
+
+from ui.styles import colors
+from ui.styles.colors import ThemeColors
 from ui.screens.base_screen import BaseScreen
 from scanner.storage import DatabaseStorage
 from exporter.common import build_rows_for_scan
@@ -14,48 +21,106 @@ from exporter.xlsx_exporter import export_xlsx
 from exporter.pdf_exporter import export_pdf
 from core.config import ConfigManager
 
+# Vorschau-Widgets
+from ui.widgets.pdf_preview import PdfPreview
+from ui.widgets.spreadsheet_preview import SpreadsheetPreview
+
+# Radio-Buttons aus deinem Projekt
+from ui.widgets.radio_button import RadioButtonGroup, SimpleRadioButton
+
+
+class HeaderIconButton(ButtonBehavior, Image):
+    """Klickbares Icon (Zahnrad)."""
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.allow_stretch = True
+        self.keep_ratio = True
+        self.color = (1, 1, 1, 1)
+
+    def on_kv_post(self, *args):
+        src = getattr(self, "source", "") or ""
+        if not resource_find(src):
+            for alt in ("ui/assets/icons/settings.png", "ui/assets/icons/settings.svg", "ui/assets/icons/settings.ico"):
+                if resource_find(alt):
+                    self.source = alt
+                    break
+
+    def on_press(self, *args):
+        self.color = ThemeColors.current["HIGHLIGHT_COLOR"]
+
+    def on_release(self, *args):
+        self.color = (1, 1, 1, 1)
 
 
 class ExportScreen(BaseScreen):
     name = "export"
     scan_id = NumericProperty(0)
 
-    format = StringProperty("csv")                # "csv" | "xlsx" | "pdf"
-    headers = ListProperty([])                    # Liste von export-keys in Reihenfolge
-    header_labels = DictProperty({})              # key -> label
-    preview_rows = ListProperty([])               # Liste von Dicts (erste N Zeilen)
+    format = StringProperty("csv")          # "csv" | "xlsx" | "pdf"
+    headers = ListProperty([])
+    header_labels = DictProperty({})
+
+    # Temp-Preview-Verwaltung
+    _temp_path = StringProperty("")
+    _current_preview = ObjectProperty(None, allownone=True)
+    _format_group = ObjectProperty(None, allownone=True)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.config_manager = ConfigManager()
 
     # ---------- Lifecycle ----------
     def on_pre_enter(self, *args):
-        # Falls der Screen ohne load_for_scan() geöffnet wurde:
         self._ensure_scan_and_headers()
-        self._build_preview()
+        # Radios erst montieren, wenn KV geladen ist
+        Clock.schedule_once(self._mount_format_radios, 0)
+        # Vorschau aufbauen
+        self._rebuild_preview_async()
 
-    # ---------- Öffentliche API (vom DevicesScreen aufgerufen) ----------
+    def on_leave(self, *args):
+        self._cleanup_temp()
+
     def load_for_scan(self, scan_id: int):
         self.scan_id = int(scan_id or 0)
-        self.reload_from_settings()  # lädt headers + baut Vorschau
+        self.reload_from_settings()
 
-    # ---------- Debug ----------
-    def _debug_dump(self, where: str, rows_len: int | None = None):
-        msg = f"[ExportScreen DEBUG] {where}: scan_id={self.scan_id}, " \
-              f"headers={self.headers[:6]}... (n={len(self.headers)})"
-        if rows_len is not None:
-            msg += f", rows={rows_len}"
-        print(msg)
+    # ---------- Routing ----------
+    def open_settings(self, *_):
+        """Wechselt zum Export-Settings-Screen (versucht mehrere mögliche Namen)."""
+        sm = self.manager or getattr(App.get_running_app(), "root", None)
+        if not sm:
+            print("[ExportScreen] Kein ScreenManager gefunden.")
+            return
+        candidate_names = [
+            "export_settings", "export-settings", "export_settings_screen", "ExportSettingsScreen"
+        ]
+        for name in candidate_names:
+            try:
+                sc = sm.get_screen(name)
+                if sc:
+                    sm.current = name
+                    return
+            except Exception:
+                continue
+        print("[ExportScreen] export_settings Screen nicht gefunden. Prüfe den Screen-Namen.")
 
-    # ---------- Intern: Scan/Headers sicherstellen ----------
+    # ---------- Daten laden ----------
+    def reload_from_settings(self):
+        props = self.config_manager.get_export_properties()
+        enabled_props = [p for p in props if int(p.get("enabled", 0)) == 1]
+        enabled_props.sort(key=lambda x: int(x.get("order", 999)))
+        self.headers = [p["key"] for p in enabled_props]
+        self.header_labels = {p["key"]: p["label"] for p in enabled_props}
+        self._rebuild_preview_async()
+
     def _ensure_scan_and_headers(self):
-        # 1) scan_id sichern
         if not int(self.scan_id or 0):
             sm = self.manager
             if sm:
                 dev = None
-                # versuche offiziellen Namen (z.B. 'geräte')
                 try:
                     dev = sm.get_screen("geräte")
                 except Exception:
-                    # Fallback: per Klassenname suchen
                     for sc in sm.screens:
                         if sc.__class__.__name__ == "DevicesScreen":
                             dev = sc
@@ -63,18 +128,15 @@ class ExportScreen(BaseScreen):
                 if dev and int(getattr(dev, "scan_id", 0)):
                     self.scan_id = int(dev.scan_id)
 
-        # 2) headers laden, falls leer
         if not self.headers:
             storage = DatabaseStorage()
             try:
                 props = storage.get_export_properties()
-            except Exception as e:
-                print(f"[ExportScreen DEBUG] get_export_properties() fehlgeschlagen: {e}")
+            except Exception:
                 props = []
             self.headers = [p["key"] for p in props if int(p.get("enabled", 0)) == 1]
             self.header_labels = {p["key"]: p.get("label", p["key"]) for p in props}
 
-        # 3) Fallback-Header, falls immer noch leer (nie blockieren!)
         if not self.headers:
             self.headers = ["object-name", "device_id", "address_port"]
             self.header_labels.update({
@@ -83,169 +145,181 @@ class ExportScreen(BaseScreen):
                 "address_port": "Adresse + Port",
             })
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.config_manager = ConfigManager()
+    # ---------- Vorschau aufbauen ----------
+    def on_format(self, *_):
+        self._rebuild_preview_async()
 
+    def _rebuild_preview_async(self):
+        Clock.schedule_once(lambda dt: self._rebuild_preview(), 0)
 
-    # ---------- Daten laden und Vorschau rendern ----------
-    def reload_from_settings(self):
-        """Lädt headers aus Config und baut Vorschau neu."""
-        props = self.config_manager.get_export_properties()
-        enabled_props = [p for p in props if int(p.get("enabled", 0)) == 1]
-        enabled_props.sort(key=lambda x: int(x.get("order", 999)))
-        
-        self.headers = [p["key"] for p in enabled_props]
-        self.header_labels = {p["key"]: p["label"] for p in enabled_props}
-        
-        self._debug_dump("reload_from_settings")
-        self._build_preview()
-
-    def _build_preview(self, max_rows: int = 20):
+    def _rebuild_preview(self):
         self._ensure_scan_and_headers()
-
-        # Debug: wie viele Geräte hat der Scan überhaupt?
-        try:
-            storage = DatabaseStorage()
-            scan = storage.get_scan_details(int(self.scan_id)) or {}
-            dev_count = len(scan.get("devices", []) or [])
-            print(f"[ExportScreen DEBUG] _build_preview: devices_in_scan={dev_count}")
-        except Exception as e:
-            print(f"[ExportScreen DEBUG] get_scan_details() Fehler: {e}")
 
         storage = DatabaseStorage()
         rows = build_rows_for_scan(int(self.scan_id), self.headers, storage)
-        self._debug_dump("_build_preview", rows_len=len(rows))
-        self.preview_rows = rows[:max_rows]
-        self._render_preview_grid()
 
-    def _render_preview_grid(self):
-        grid = self.ids.get("preview_grid")
-        if not grid:
-            print("[ExportScreen DEBUG] preview_grid nicht gefunden.")
-            return
-        grid.clear_widgets()
-        grid.cols = max(1, len(self.headers))
+        # Temp-Datei erzeugen
+        tmp_dir = os.path.join("data", "tmp")
+        os.makedirs(tmp_dir, exist_ok=True)
+        tmp_name = f"preview_scan_{self.scan_id}.{self._ext_for_format()[1:]}"
+        tmp_path = os.path.join(tmp_dir, tmp_name)
 
-        from kivy.uix.label import Label
-        # Kopfzeile
-        for h in self.headers:
-            grid.add_widget(Label(
-                text=str(self.header_labels.get(h, h)),
-                bold=True, halign='left', valign='middle',
-                color=colors.TEXT_COLOR, text_size=(0, 0)
-            ))
-        # Zeilen
-        for row in self.preview_rows:
-            for h in self.headers:
-                val = row.get(h, "")
-                grid.add_widget(Label(
-                    text=str(val),
-                    halign='left', valign='middle',
-                    color=colors.TEXT_COLOR, text_size=(0, 0)
-                ))
-
-    # ---------- UI-Callbacks (aus KV) ----------
-    def set_format_csv(self):  self.format = "csv"
-    def set_format_xlsx(self): self.format = "xlsx"
-    def set_format_pdf(self):  self.format = "pdf"  # TODO: später implementieren
-
-    def open_settings(self):
-        sm = self.manager
-        if not sm:
-            print("Kein ScreenManager gefunden.")
-            return
         try:
-            scr = sm.get_screen("export_settings")
-        except Exception:
-            scr = None
-            for s in sm.screens:
-                if s.__class__.__name__ == "ExportSettingsScreen":
-                    scr = s
-                    break
-        if not scr:
-            print("ExportSettingsScreen nicht gefunden")
-            return
-        scr.load_fields()
-        sm.current = scr.name
+            if self.format == "csv":
+                export_csv(tmp_path, rows, self.headers, self.header_labels)
+            elif self.format == "xlsx":
+                export_xlsx(tmp_path, rows, self.headers, self.header_labels)
+            elif self.format == "pdf":
+                export_pdf(
+                    tmp_path,
+                    rows,
+                    self.headers,
+                    self.header_labels,
+                    title=f"Geräteliste – Scan {self.scan_id}",
+                    landscape_mode=True,
+                    logo_path="assets/siemens_logo.svg",
+                    user_info=None,
+                    user_settings_path="config/user_settings.json",
+                )
+            self._temp_path = tmp_path
+        except Exception as e:
+            print(f"[ExportScreen] Temp-Vorschau fehlgeschlagen: {e}")
+            self._temp_path = ""
 
-    # ---------- SPEICHERN UNTER… ----------
+        # Vorschau-Widget einsetzen
+        host = self.ids.get("preview_host")
+        if not host:
+            print("[ExportScreen] preview_host nicht gefunden.")
+            return
+        host.clear_widgets()
+        self._current_preview = None
+
+        if self.format == "pdf" and self._temp_path:
+            pv = PdfPreview(fit_to_width=True)
+            host.add_widget(pv)
+            self._current_preview = pv
+            pv.source = self._temp_path
+        elif self.format in ("csv", "xlsx") and self._temp_path:
+            sp = SpreadsheetPreview(filetype=self.format)
+            host.add_widget(sp)
+            self._current_preview = sp
+            sp.source = self._temp_path
+        else:
+            from kivy.uix.label import Label
+            host.add_widget(Label(text="Keine Vorschau verfügbar.", color=colors.TEXT_COLOR))
+
+    # ---------- Export ----------
     def export_now(self):
-        """Öffnet den nativen 'Speichern unter…' Dialog (plyer).
-        Prüft vorab, ob Daten vorhanden sind. Hängt fehlende Extension an
-        und merkt sich den letzten Ordner."""
         self._ensure_scan_and_headers()
 
         storage = DatabaseStorage()
-        probe_rows = build_rows_for_scan(int(self.scan_id), self.headers, storage)
-        self._debug_dump("export_now (probe)", rows_len=len(probe_rows))
-        if not probe_rows:
-            # Zusätzlicher Hinweis, WIESO keine rows:
-            try:
-                scan = storage.get_scan_details(int(self.scan_id)) or {}
-                dev_count = len(scan.get("devices", []) or [])
-                print(f"[ExportScreen DEBUG] export_now: Keine Rows. devices_in_scan={dev_count}")
-            except Exception:
-                pass
-            print("Keine Daten zu exportieren (Probe vor Dialog). Prüfe scan_id/DB-Inhalt.")
+        rows = build_rows_for_scan(int(self.scan_id), self.headers, storage)
+        if not rows:
+            print("Keine Daten zu exportieren.")
             return
 
-        ext = self._ext_for_format()             # ".csv" / ".xlsx" / ".pdf"
-        suggested = self._suggest_filename()     # z.B. "scan_12_20250908_153012.csv"
+        ext = self._ext_for_format()
+        suggested = self._suggest_filename()
         start_dir = self._get_last_dir()
 
         try:
             from plyer import filechooser
-            preferred_path = os.path.join(start_dir, suggested)
-            selection = None
-            try:
-                selection = filechooser.save_file(
-                    title="Speichern unter…",
-                    path=preferred_path,
-                    filters=[("Dateien", f"*{ext}")]
-                )
-            except Exception:
-                selection = filechooser.save_file(
-                    title="Speichern unter…",
-                    path=start_dir,
-                    filters=[("Dateien", f"*{ext}")]
-                )
-
-            if not selection:
-                print("[ExportScreen DEBUG] export_now: Nutzer hat abgebrochen.")
+            sel = filechooser.save_file(
+                title="Speichern unter…",
+                path=os.path.join(start_dir, suggested),
+                filters=[("Dateien", f"*{ext}")]
+            )
+            if not sel:
+                print("[Export] Nutzer hat abgebrochen.")
                 return
-
-            chosen = selection if isinstance(selection, str) else selection[0]
-
-            # Falls Ordner zurückkam → Namensvorschlag anhängen
+            chosen = sel if isinstance(sel, str) else sel[0]
             if os.path.isdir(chosen):
                 chosen = os.path.join(chosen, suggested)
-
-            # Extension erzwingen
             if not chosen.lower().endswith(ext):
                 chosen += ext
 
-            # Ordner merken
-            self._save_last_dir(os.path.dirname(chosen) or ".")
+            if self.format == "csv":
+                export_csv(chosen, rows, self.headers, self.header_labels)
+            elif self.format == "xlsx":
+                export_xlsx(chosen, rows, self.headers, self.header_labels)
+            elif self.format == "pdf":
+                export_pdf(
+                    chosen, rows, self.headers, self.header_labels,
+                    title=f"Geräteliste – Scan {self.scan_id}", landscape_mode=True,
+                    logo_path="assets/siemens_logo.svg",
+                    user_info=None, user_settings_path="config/user_settings.json"
+                )
 
-            # Export durchführen (mit bereits vorbereiteten rows)
-            return self._do_export_to(chosen, rows=probe_rows)
+            self._save_last_dir(os.path.dirname(chosen) or ".")
+            self._cleanup_temp()
+            print(f"Export fertig: {chosen}")
 
         except Exception as e:
-            print(f"Speichern fehlgeschlagen (plyer). Grund: {e}")
+            print(f"Speichern fehlgeschlagen: {e}")
+
+    # ---------- Radio-Gruppe ----------
+    def _mount_format_radios(self, *_):
+        box = self.ids.get("format_group_container")
+        if not box:
+            print("[ExportScreen] format_group_container nicht gefunden.")
             return
 
-    # ---------- Hilfsfunktionen ----------
+        box.clear_widgets()
+        label_for = {"csv": "CSV", "xlsx": "Excel (XLSX)", "pdf": "PDF"}
+        options = [label_for["csv"], label_for["xlsx"], label_for["pdf"]]
+        selected_label = label_for.get(self.format, "CSV")
+
+        grp = RadioButtonGroup(
+            options=options,
+            selected=selected_label,
+            group_name="export_format",
+            on_selection_changed=self._on_format_selected,
+        )
+        grp.orientation = "horizontal"
+        grp.spacing = dp(12)
+        grp.size_hint_x = 1
+        grp.size_hint_y = None
+        grp.bind(minimum_height=grp.setter("height"))
+
+        box.add_widget(grp)
+        self._format_group = grp
+        Clock.schedule_once(self._fix_radio_children_sizes, 0)
+
+    def _fix_radio_children_sizes(self, *_):
+        grp = self._format_group
+        if not grp:
+            return
+        for child in grp.children:
+            if not isinstance(child, SimpleRadioButton):
+                continue
+            lbl = getattr(child, "label", None)
+            icon_box = getattr(child, "radio_image_container", None)
+            if lbl:
+                lbl.texture_update()
+                text_w = lbl.texture_size[0]
+            else:
+                text_w = dp(40)
+            icon_w = icon_box.width if icon_box else dp(20)
+            child.size_hint_x = None
+            child.width = dp(12) + icon_w + child.spacing + text_w + dp(12)
+            child.size_hint_y = None
+            child.height = dp(30)
+
+    def _on_format_selected(self, label: str):
+        mapping = {"CSV": "csv", "Excel (XLSX)": "xlsx", "PDF": "pdf"}
+        new_fmt = mapping.get(label, "csv")
+        if new_fmt != self.format:
+            self.format = new_fmt
+
+    # ---------- Misc ----------
     def _ext_for_format(self) -> str:
         return ".csv" if self.format == "csv" else ".xlsx" if self.format == "xlsx" else ".pdf"
 
     def _suggest_filename(self) -> str:
-        from datetime import datetime
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         return f"scan_{self.scan_id}_{ts}{self._ext_for_format()}"
 
     def _get_last_dir(self) -> str:
-        """Merkt den letzten Export-Ordner schlicht in einer Textdatei unter ./data/."""
         try:
             os.makedirs("data", exist_ok=True)
             path = "data/last_export_dir.txt"
@@ -256,7 +330,6 @@ class ExportScreen(BaseScreen):
                         return d
         except Exception:
             pass
-        # Fallback
         try:
             app = App.get_running_app()
             if hasattr(app, "user_data_dir") and os.path.isdir(app.user_data_dir):
@@ -273,35 +346,16 @@ class ExportScreen(BaseScreen):
         except Exception:
             pass
 
-    def _do_export_to(self, target_path: str, rows: List[Dict] | None = None):
-        storage = DatabaseStorage()
-        rows = rows if rows is not None else build_rows_for_scan(int(self.scan_id), self.headers, storage)
-        self._debug_dump("_do_export_to", rows_len=len(rows))
-
-        if not rows:
-            print("Keine Daten zu exportieren.")
-            return
-
-        os.makedirs(os.path.dirname(target_path) or ".", exist_ok=True)
-
-        if self.format == "csv":
-            export_csv(target_path, rows, self.headers, self.header_labels)
-        elif self.format == "xlsx":
-            export_xlsx(target_path, rows, self.headers, self.header_labels)
-        elif self.format == "pdf":
-            from exporter.pdf_exporter import export_pdf
-            export_pdf(
-                target_path,
-                rows,
-                self.headers,
-                self.header_labels,
-                title=f"Geräteliste – Scan {self.scan_id}",
-                landscape_mode=True,
-                logo_path="assets/siemens_logo.svg",   # Pfad anpassen, falls abweichend
-                user_info=None,                        # optional: direkt dict übergeben
-                user_settings_path="config/user_settings.json"  # oder weglassen -> Auto-Suche
-            )
+    def _cleanup_temp(self):
+        p = getattr(self, "_temp_path", "")
+        if p and os.path.isfile(p):
+            try:
+                os.remove(p)
+                print(f"[ExportScreen] Temp gelöscht: {p}")
+            except Exception:
+                pass
+        self._temp_path = ""
 
 
-# KV NACH den Klassen laden
+# KV laden
 Builder.load_file('ui/screens/export_screen.kv')

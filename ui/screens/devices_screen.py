@@ -4,7 +4,6 @@ from kivy.uix.scrollview import ScrollView
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.gridlayout import GridLayout
-from kivy.uix.textinput import TextInput
 from kivy.uix.image import Image
 from kivy.lang import Builder
 from kivy.properties import StringProperty, ObjectProperty, ListProperty, NumericProperty
@@ -18,6 +17,12 @@ from ui.styles.colors import ThemeColors
 from scanner.storage import DatabaseStorage
 from kivy.app import App
 import re
+
+# 👉 HintTextInput import mit Fallback auf styles
+try:
+    from ui.widgets.hint_text_input import HintTextInput
+except Exception:
+    from ui.styles.hint_text_input import HintTextInput  # Fallback, falls Widget dort liegt
 
 # KV-Datei laden
 Builder.load_file('ui/screens/devices_screen.kv')
@@ -34,8 +39,6 @@ class IconButton(ButtonBehavior, BoxLayout):
     def setup_button(self):
         """Richtet den Icon-Button ein"""
         self.clear_widgets()
-        
-        # Icon Image
         self.icon_image = Image(
             source=self.icon_source,
             size_hint=(None, None),
@@ -43,15 +46,12 @@ class IconButton(ButtonBehavior, BoxLayout):
             pos_hint={'center_x': 0.5, 'center_y': 0.5},
             color=ThemeColors.current["TEXT_COLOR"]
         )
-        
         self.add_widget(self.icon_image)
     
     def on_press(self):
-        """Visuelles Feedback beim Drücken"""
         self.icon_image.color = ThemeColors.current["HIGHLIGHT_COLOR"]
     
     def on_release(self):
-        """Zurücksetzen der Farbe nach dem Loslassen"""
         self.icon_image.color = ThemeColors.current["TEXT_COLOR"]
 
 class DeviceRow(ButtonBehavior, BoxLayout):
@@ -68,7 +68,7 @@ class DevicesScreen(BaseScreen):
     name = "devices"
     screen_title = StringProperty("")
     scan_id = NumericProperty(0)
-    devices = ListProperty([])  # Alle Geräte
+    devices = ListProperty([])           # Alle Geräte
     filtered_devices = ListProperty([])  # Gefilterte Geräte
     search_query = StringProperty("")
     config_manager = ObjectProperty(None)
@@ -77,21 +77,19 @@ class DevicesScreen(BaseScreen):
         super(DevicesScreen, self).__init__(**kwargs)
         self.config_manager = ConfigManager()
         
-        # Registriere Events
+        # Events registrieren
         event_bus.bind(on_language_changed=self.on_language_changed)
         event_bus.bind(on_theme_changed=self.on_theme_changed)
         
-        # Initialisiere UI
+        # UI
         self.update_translations()
         Clock.schedule_once(self.setup_ui, 0)
     
     def update_translations(self):
-        """Aktualisiert die Übersetzungen"""
         self.screen_title = _("devices.title")
     
     def setup_ui(self, *args):
         """Richtet die UI ein"""
-        # Hauptlayout
         main_layout = BoxLayout(orientation='vertical', padding=[dp(20), dp(20), dp(20), dp(20)], spacing=dp(20))
         
         # Scrollview für den Inhalt
@@ -114,7 +112,7 @@ class DevicesScreen(BaseScreen):
         )
         title_label.bind(size=lambda instance, value: setattr(instance, 'text_size', value))
         
-        # Scan-ID anzeigen (falls vorhanden)
+        # Scan-ID
         scan_info_label = Label(
             text=f"Scan #{self.scan_id}" if self.scan_id else "",
             color=ThemeColors.current["TEXT_COLOR"],
@@ -126,7 +124,7 @@ class DevicesScreen(BaseScreen):
         )
         scan_info_label.bind(size=lambda instance, value: setattr(instance, 'text_size', value))
         
-        # Suchfeld
+        # Suchfeld-Zeile
         search_layout = BoxLayout(orientation='horizontal', spacing=dp(10), size_hint_y=None, height=dp(40))
         
         search_label = Label(
@@ -139,31 +137,23 @@ class DevicesScreen(BaseScreen):
         )
         search_label.bind(size=lambda instance, value: setattr(instance, 'text_size', value))
         
-        self.search_input = TextInput(
+        # 👉 NEU: HintTextInput statt TextInput
+        self.search_input = HintTextInput(
             hint_text=_("devices.search_hint"),
             size_hint_y=None,
             height=dp(40),
-            multiline=False,
-            background_color=ThemeColors.current["CARD_BACKGROUND"],
-            foreground_color=ThemeColors.current["TEXT_COLOR"]
+            multiline=False
+            # keine foreground/background hier setzen – das macht das Widget selbst
         )
+        # falls deine HintTextInput-Version unsichtbare Selektion kann – nur setzen, wenn vorhanden
+        if hasattr(self.search_input, "hide_selection_visuals"):
+            self.search_input.hide_selection_visuals = True
+
         self.search_input.bind(text=self.on_search_text_changed)
         
-        # Clear Search Icon Button
-        clear_button_container = BoxLayout(
-            size_hint_x=None,
-            width=dp(40),
-            size_hint_y=None,
-            height=dp(40)
-        )
-        
-        # Verwende ein Standard-Icon oder erstelle ein einfaches X-Icon
-        self.clear_button = IconButton(
-            icon_source='ui/assets/icons/clear.ico',  # Falls du ein Icon hast
-            size_hint=(1, 1)
-        )
-        
-        # Fallback: Falls kein Icon vorhanden ist, verwende einen normalen Button
+        # Clear Button (Icon oder Fallback-Button)
+        clear_button_container = BoxLayout(size_hint_x=None, width=dp(40), size_hint_y=None, height=dp(40))
+        self.clear_button = IconButton(icon_source='ui/assets/icons/clear.ico', size_hint=(1, 1))
         if not self._icon_exists('ui/assets/icons/clear.ico'):
             self.clear_button = Button(
                 text="✕",
@@ -173,7 +163,6 @@ class DevicesScreen(BaseScreen):
                 color=ThemeColors.current["TEXT_COLOR"],
                 font_size=dp(16)
             )
-        
         self.clear_button.bind(on_release=self.clear_search)
         clear_button_container.add_widget(self.clear_button)
         
@@ -201,12 +190,8 @@ class DevicesScreen(BaseScreen):
         header_layout.add_widget(search_layout)
         header_layout.add_widget(self.result_info_label)
         
-        # Container für Geräteliste
-        self.device_container = GridLayout(
-            cols=1,
-            size_hint_y=None,
-            spacing=dp(2)
-        )
+        # Geräte-Container
+        self.device_container = GridLayout(cols=1, size_hint_y=None, spacing=dp(2))
         self.device_container.bind(minimum_height=self.device_container.setter('height'))
         
         # Geräte rendern
@@ -224,76 +209,52 @@ class DevicesScreen(BaseScreen):
         )
         export_button.bind(on_release=self.open_export_screen)
         
-        # Füge Widgets zum Layout hinzu
+        # Layout aufbauen
         content_layout.add_widget(header_layout)
         content_layout.add_widget(self.device_container)
-        
-        # Füge einen Spacer hinzu, um den Button unten zu halten
-        spacer = BoxLayout(size_hint_y=None, height=dp(20))
-        content_layout.add_widget(spacer)
+        content_layout.add_widget(BoxLayout(size_hint_y=None, height=dp(20)))  # Spacer
         
         scroll_view.add_widget(content_layout)
         main_layout.add_widget(scroll_view)
         main_layout.add_widget(export_button)
         
-        # Lösche alle vorhandenen Widgets und füge das neue Layout hinzu
         self.clear_widgets()
         self.add_widget(main_layout)
         
-        # WICHTIG: Initialisiere den Clear-Button-Zustand NACH dem Layout
         Clock.schedule_once(self._initialize_clear_button_state, 0.1)
     
     def _initialize_clear_button_state(self, *args):
-        """Initialisiert den Clear-Button-Zustand korrekt"""
         if hasattr(self, 'clear_button') and hasattr(self, 'search_input'):
-            # Setze die initiale Opacity basierend auf dem aktuellen Suchtext
-            current_text = self.search_input.text.strip()
+            current_text = (self.search_input.text or "").strip()
             self.clear_button.opacity = 1.0 if current_text else 0.3
             print(f"DEBUG: Clear-Button initialisiert - Text: '{current_text}', Opacity: {self.clear_button.opacity}")
     
     def _icon_exists(self, path):
-        """Prüft, ob ein Icon-File existiert"""
         import os
         return os.path.exists(path)
     
     def on_search_text_changed(self, instance, text):
-        """Wird aufgerufen, wenn sich der Suchtext ändert"""
-        self.search_query = text.lower().strip()
+        self.search_query = (text or "").lower().strip()
         self._update_filtered_devices()
         self._render_device_rows()
         self._update_result_info()
-        
-        # Zeige/Verstecke Clear-Button basierend auf Suchtext
         if hasattr(self, 'clear_button'):
-            new_opacity = 1.0 if text.strip() else 0.3
-            self.clear_button.opacity = new_opacity
-            print(f"DEBUG: Clear-Button Opacity geändert zu: {new_opacity}")
+            self.clear_button.opacity = 1.0 if (text or "").strip() else 0.3
     
     def clear_search(self, *args):
-        """Löscht das Suchfeld"""
         if hasattr(self, 'search_input'):
             self.search_input.text = ""
-            # Opacity wird automatisch durch on_search_text_changed aktualisiert
     
     def _update_filtered_devices(self):
-        """Aktualisiert die gefilterte Geräteliste basierend auf der Suchanfrage"""
         if not self.search_query:
             self.filtered_devices = self.devices[:]
             return
-        
-        filtered = []
-        for device in self.devices:
-            if self._device_matches_search(device, self.search_query):
-                filtered.append(device)
-        
+        filtered = [d for d in self.devices if self._device_matches_search(d, self.search_query)]
         self.filtered_devices = filtered
     
     def _device_matches_search(self, device, query):
-        """Prüft, ob ein Gerät der Suchanfrage entspricht"""
         if not query:
             return True
-        
-        # Suchbare Felder definieren
         searchable_fields = [
             device.get("name", ""),
             str(device.get("device_id", "")),
@@ -306,29 +267,19 @@ class DevicesScreen(BaseScreen):
             device.get("firmware_revision", ""),
             device.get("object_name", ""),
         ]
-        
-        # Zusätzliche Properties durchsuchen
         props = device.get("properties", {})
         if props:
             for key, value in props.items():
                 if isinstance(value, (str, int, float)):
                     searchable_fields.append(str(value))
-        
-        # Suche in allen Feldern
         search_text = " ".join(searchable_fields).lower()
-        
-        # Unterstützung für mehrere Suchbegriffe (UND-Verknüpfung)
-        search_terms = query.split()
-        return all(term in search_text for term in search_terms)
+        return all(term in search_text for term in query.split())
     
     def _update_result_info(self):
-        """Aktualisiert die Ergebnis-Information"""
         if not hasattr(self, 'result_info_label'):
             return
-        
         total_devices = len(self.devices)
         filtered_devices = len(self.filtered_devices)
-        
         if self.search_query:
             if filtered_devices == 0:
                 self.result_info_label.text = _("devices.no_results")
@@ -347,7 +298,6 @@ class DevicesScreen(BaseScreen):
                 self.result_info_label.text = _("devices.multiple_devices").format(count=total_devices)
     
     def load_scan(self, scan_id: int):
-        """Lädt Scan-Ergebnisse für eine bestimmte Scan-ID"""
         print(f"DEBUG: Lade Scan-Ergebnisse für Scan-ID {scan_id} in DevicesScreen")
         self.scan_id = scan_id
         storage = DatabaseStorage()
@@ -363,29 +313,19 @@ class DevicesScreen(BaseScreen):
                 device_id = d.get("device_id", 0)
                 address = d.get("address", "")
                 props = d.get("properties") or {}
-                
-                # Debug-Ausgabe für Properties
                 print(f"DEBUG: Gerät {device_id} Properties: {list(props.keys())}")
                 
-                # Verschiedene Möglichkeiten für den Gerätenamen prüfen
                 device_name = None
-                
-                # 1. Versuche "object-name"
                 if "object-name" in props:
                     device_name = props["object-name"]
                     print(f"DEBUG: Gefunden object-name: '{device_name}'")
-                
-                # 2. Fallback auf "name"
                 elif "name" in props:
                     device_name = props["name"]
                     print(f"DEBUG: Gefunden name: '{device_name}'")
-                
-                # 3. Fallback auf Standard-Name
                 if not device_name or device_name.strip() == "":
                     device_name = f"Device {device_id}"
                     print(f"DEBUG: Verwende Standard-Name: '{device_name}'")
                 
-                # Erweiterte Geräteinformationen extrahieren
                 device_info = {
                     "device_id": device_id,
                     "name": device_name,
@@ -397,35 +337,26 @@ class DevicesScreen(BaseScreen):
                     "application_software_version": props.get("application-software-version", ""),
                     "firmware_revision": props.get("firmware-revision", ""),
                     "object_name": props.get("object-name", ""),
-                    "properties": props  # Alle Properties für erweiterte Suche
+                    "properties": props
                 }
-                
                 items.append(device_info)
-                
                 print(f"DEBUG: Hinzugefügtes Gerät - ID: {device_id}, Name: '{device_name}', Adresse: '{address}'")
         
         self.devices = items
         print(f"DEBUG: Scan-Ergebnisse erfolgreich geladen: {len(items)} Geräte")
-        
-        # UI neu aufbauen mit den neuen Daten
         self.setup_ui()
     
     def _render_device_rows(self):
-        """Rendert die Geräte-Zeilen"""
         if not hasattr(self, 'device_container') or not self.device_container:
             return
-        
         devices_to_show = self.filtered_devices
         print(f"DEBUG: Rendere {len(devices_to_show)} Geräte-Zeilen")
         self.device_container.clear_widgets()
         
         for i, dev in enumerate(devices_to_show):
             print(f"DEBUG: Erstelle Zeile für Gerät {i}: {dev}")
-            
-            # Zusätzliche Informationen für die Anzeige
             description = dev.get("description", "")
             location = dev.get("location", "")
-            
             row = DeviceRow(
                 index=i,
                 device_id=dev["device_id"],
@@ -440,19 +371,15 @@ class DevicesScreen(BaseScreen):
             self.device_container.add_widget(row)
     
     def open_device_details(self, device_id: int, *_):
-        """Öffnet die Detailansicht für ein Gerät"""
         sm = self.manager
         if not sm:
             print("Kein ScreenManager gefunden.")
             return
-
         details = None
-        # 1) versuche offiziellen Namen
         try:
             details = sm.get_screen("device_details")
         except Exception:
             pass
-        # 2) Fallback per Klassenname
         if not details:
             for sc in sm.screens:
                 if sc.__class__.__name__ == "DeviceDetailsScreen":
@@ -461,18 +388,14 @@ class DevicesScreen(BaseScreen):
         if not details:
             print("DeviceDetailsScreen nicht im ScreenManager gefunden.")
             return
-
         details.load_device(self.scan_id, int(device_id))
         sm.current = details.name
 
     def open_export_screen(self, *_):
-        """Öffnet den Export-Screen"""
         sm = self.manager
         if not sm:
             print("Kein ScreenManager gefunden.")
             return
-
-        # ExportScreen besorgen
         try:
             screen = sm.get_screen("export")
         except Exception:
@@ -481,34 +404,25 @@ class DevicesScreen(BaseScreen):
                 if sc.__class__.__name__ == "ExportScreen":
                     screen = sc
                     break
-
         if not screen:
             print("ExportScreen nicht im ScreenManager gefunden.")
             return
-
-        # Kontext setzen + navigieren
         screen.load_for_scan(int(self.scan_id))
         sm.current = screen.name
     
     def on_language_changed(self, instance, language_code):
-        """Wird aufgerufen, wenn die Sprache geändert wird"""
         self.update_translations()
         self.setup_ui()
     
     def on_theme_changed(self, instance, theme_name):
-        """Wird aufgerufen, wenn das Theme geändert wird"""
         self.setup_ui()
     
     def on_pre_enter(self, *args):
-        """Wird aufgerufen, bevor der Screen angezeigt wird"""
         super().on_pre_enter(*args)
-        # UI aktualisieren falls nötig
         if hasattr(self, 'device_container'):
             self._update_filtered_devices()
             self._render_device_rows()
             self._update_result_info()
-        
-        # Clear-Button-Zustand auch hier aktualisieren
         if hasattr(self, 'clear_button') and hasattr(self, 'search_input'):
-            current_text = self.search_input.text.strip()
+            current_text = (self.search_input.text or "").strip()
             self.clear_button.opacity = 1.0 if current_text else 0.3

@@ -28,8 +28,8 @@ class BACnetScannerBuilder:
     def get_import_name(self, package_name):
         """Konvertiert Paketnamen zu Import-Namen"""
         import_mapping = {
-            'pyinstaller': 'PyInstaller',  # ← Korrigiert
-            'pywin32': 'win32api',         # ← Korrigiert
+            'pyinstaller': 'PyInstaller',
+            'pywin32': 'win32api',
             'kivy-deps.angle': 'kivy_deps.angle',
             'kivy-deps.glew': 'kivy_deps.glew', 
             'kivy-deps.sdl2': 'kivy_deps.sdl2',
@@ -49,7 +49,6 @@ class BACnetScannerBuilder:
 
     def parse_version_spec(self, package_spec):
         """Parst Paket-Spezifikation und extrahiert Name und Versionsbedingung"""
-        # Regex für Versionsspezifikationen: package>=1.0.0, package==1.0.0, etc.
         match = re.match(r'^([a-zA-Z0-9\-_.]+)([><=!]+)(.+)$', package_spec.strip())
         
         if match:
@@ -58,13 +57,12 @@ class BACnetScannerBuilder:
             required_version = match.group(3)
             return package_name, operator, required_version
         else:
-            # Keine Versionsspezifikation
             return package_spec.strip(), None, None
 
     def check_version_compatibility(self, installed_version, operator, required_version):
         """Prüft ob installierte Version die Anforderung erfüllt"""
         if operator is None:
-            return True  # Keine Versionsbedingung
+            return True
         
         try:
             installed = version.parse(installed_version)
@@ -85,7 +83,7 @@ class BACnetScannerBuilder:
             else:
                 return True
         except Exception:
-            return True  # Bei Parsing-Fehlern als kompatibel betrachten
+            return True
 
     def get_installed_version(self, package_name):
         """Ermittelt die installierte Version eines Pakets"""
@@ -99,7 +97,6 @@ class BACnetScannerBuilder:
         requirements = []
         
         if not requirements_file.exists():
-            # Fallback auf installierte Pakete
             return [
                 'pyinstaller>=6.0.0', 'kivy>=2.0.0', 'bacpypes3>=0.0.100', 
                 'BAC0>=2025.0.0', 'pandas>=2.0.0', 'openpyxl>=3.0.0', 
@@ -110,11 +107,9 @@ class BACnetScannerBuilder:
             for line in f:
                 line = line.strip()
                 
-                # Überspringe leere Zeilen und Kommentare
                 if not line or line.startswith('#'):
                     continue
                 
-                # Entferne Inline-Kommentare
                 if '#' in line:
                     line = line.split('#')[0].strip()
                 
@@ -132,19 +127,17 @@ class BACnetScannerBuilder:
                 shutil.rmtree(folder)
                 print(f"   🗑️ {folder.name} entfernt")
         
-        # Output-Verzeichnis erstellen
         self.output_dir.mkdir(exist_ok=True)
         self.dist_dir.mkdir(exist_ok=True)
         self.build_dir.mkdir(exist_ok=True)
 
     def check_dependencies(self):
-        """Prüft erforderliche Python-Abhängigkeiten mit korrekter Versionsprüfung"""
+        """Prüft erforderliche Python-Abhängigkeiten"""
         print("📋 Prüfe Python-Abhängigkeiten...")
         
         if not self.in_venv:
             print("⚠️ WARNUNG: Keine virtuelle Umgebung aktiv!")
         
-        # Requirements parsen
         requirements_file = self.installer_dir / "requirements.txt"
         required_packages = self.parse_requirements(requirements_file)
         
@@ -152,22 +145,17 @@ class BACnetScannerBuilder:
         available_packages = []
         
         for package_spec in required_packages:
-            # Parse Paket-Spezifikation
             package_name, operator, required_version = self.parse_version_spec(package_spec)
-            
-            # Import-Namen ermitteln
             import_name = self.get_import_name(package_name)
             
             try:
-                # Prüfe ob Paket importierbar ist
                 if import_name == 'sqlite3':
-                    import sqlite3  # Standardbibliothek
-                    installed_version = "3.x"  # Dummy-Version
+                    import sqlite3
+                    installed_version = "3.x"
                 else:
                     __import__(import_name)
                     installed_version = self.get_installed_version(package_name)
                 
-                # Prüfe Versionsbedingung
                 if operator and required_version and installed_version:
                     if self.check_version_compatibility(installed_version, operator, required_version):
                         available_packages.append(package_spec)
@@ -176,7 +164,6 @@ class BACnetScannerBuilder:
                         missing_packages.append(package_spec)
                         print(f"   ❌ {package_spec} (installiert: {installed_version}, benötigt: {operator}{required_version})")
                 else:
-                    # Keine Versionsprüfung oder Version nicht ermittelbar
                     available_packages.append(package_spec)
                     print(f"   ✅ {package_spec} (installiert: {installed_version or 'unbekannt'})")
                     
@@ -203,86 +190,98 @@ class BACnetScannerBuilder:
         # Wechsle ins Projekt-Root für PyInstaller
         original_cwd = os.getcwd()
         os.chdir(self.project_root)
+        print(f"📂 Arbeitsverzeichnis gewechselt zu: {self.project_root}")
         
         try:
-            # PyInstaller-Kommando mit aktuellen Abhängigkeiten
+            # Prüfe ob Entry Point existiert
+            entry_point = Path("scanner/main.py")
+            if not entry_point.exists():
+                print(f"❌ Entry Point nicht gefunden: {entry_point.absolute()}")
+                return False
+            
+            print(f"✅ Entry Point gefunden: {entry_point.absolute()}")
+            
+            # PyInstaller-Kommando (jetzt mit korrekten relativen Pfaden)
             cmd = [
                 sys.executable, '-m', 'PyInstaller',
                 '--onefile',
                 '--windowed',
                 '--name=BACnet_Scanner_v4',
-                f'--distpath={self.dist_dir}',
-                f'--workpath={self.build_dir}',
-                f'--specpath={self.installer_dir}',
+                '--clean',
+                f'--distpath={self.dist_dir.absolute()}',
+                f'--workpath={self.build_dir.absolute()}',
+                f'--specpath={self.project_root.absolute()}',  # ← HIER IST DIE ÄNDERUNG
+                
+                # Datenverzeichnisse (relativ zum project_root)
                 '--add-data=ui;ui',
                 '--add-data=config;config',
-                '--add-data=assets;assets',
                 '--add-data=core;core',
                 '--add-data=exporter;exporter',
                 
-                # Kivy-Dependencies
+                # Hidden Imports
                 '--hidden-import=kivy.deps.sdl2',
                 '--hidden-import=kivy.deps.glew',
                 '--hidden-import=kivy.deps.angle',
                 '--hidden-import=kivy_garden',
                 '--hidden-import=kivy_garden.graph',
-                
-                # BACnet-Libraries (moderne Versionen)
                 '--hidden-import=bacpypes3',
                 '--hidden-import=BAC0',
                 '--hidden-import=netifaces',
-                
-                # Standard-Libraries
                 '--hidden-import=asyncio',
                 '--hidden-import=sqlite3',
                 '--hidden-import=aiosqlite',
-                
-                # Data Processing
                 '--hidden-import=pandas',
                 '--hidden-import=numpy',
-                
-                # Export-Functions
                 '--hidden-import=openpyxl',
                 '--hidden-import=reportlab',
                 '--hidden-import=lxml',
                 '--hidden-import=svglib',
-                
-                # Image Processing
                 '--hidden-import=PIL',
                 '--hidden-import=PIL.Image',
-                
-                # Web Framework (falls verwendet)
                 '--hidden-import=flask',
                 '--hidden-import=werkzeug',
-                
-                # Utilities
                 '--hidden-import=dateutil',
                 '--hidden-import=dotenv',
                 '--hidden-import=requests',
                 '--hidden-import=plyer',
-                
-                # Windows-specific
                 '--hidden-import=win32api',
                 '--hidden-import=win32gui',
                 '--hidden-import=win32con',
                 
+                # Entry Point (relativ zum project_root)
                 'scanner/main.py'
             ]
             
-            # Icon hinzufügen, falls vorhanden
-            icon_path = self.installer_dir / "assets" / "installer_icon.ico"
-            if icon_path.exists():
-                cmd.insert(-1, f'--icon={icon_path}')
-            elif (self.project_root / "ui" / "assets" / "icons" / "connection_yel-logo.ico").exists():
-                cmd.insert(-1, f'--icon=ui/assets/icons/connection_yel-logo.ico')
+            # Assets hinzufügen falls vorhanden
+            if Path("assets").exists():
+                cmd.insert(-1, '--add-data=assets;assets')
+                print("   📁 Assets hinzugefügt")
             
-            print(f"🐍 Verwende Python: {sys.executable}")
+            # Icon hinzufügen
+            icon_paths = [
+                Path("ui/assets/icons/connection_yel-logo.ico"),
+                self.installer_dir / "assets" / "installer_icon.ico"
+            ]
+            
+            for icon_path in icon_paths:
+                if icon_path.exists():
+                    if icon_path.is_absolute():
+                        # Für absolute Pfade (installer assets)
+                        cmd.insert(-1, f'--icon={icon_path}')
+                    else:
+                        # Für relative Pfade (project assets)
+                        cmd.insert(-1, f'--icon={icon_path}')
+                    print(f"   🎨 Icon: {icon_path}")
+                    break
+            
+            print(f"🐍 Python: {sys.executable}")
             print(f"🔧 Starte PyInstaller...")
             
+            # PyInstaller ausführen
             result = subprocess.run(cmd, check=True, capture_output=True, text=True)
             print("✅ Executable erfolgreich erstellt!")
             
-            # Prüfe ob EXE erstellt wurde
+            # Prüfe Ergebnis
             exe_path = self.dist_dir / "BACnet_Scanner_v4.exe"
             if exe_path.exists():
                 size_mb = exe_path.stat().st_size / 1024 / 1024
@@ -301,7 +300,10 @@ class BACnetScannerBuilder:
                 print(f"Stderr: {e.stderr}")
             return False
         finally:
+            # Arbeitsverzeichnis zurücksetzen
             os.chdir(original_cwd)
+            print(f"📂 Arbeitsverzeichnis zurückgesetzt zu: {original_cwd}")
+
 
     def check_nsis(self):
         """Prüft ob NSIS verfügbar ist"""
@@ -329,7 +331,6 @@ class BACnetScannerBuilder:
             print(f"❌ {nsi_file} nicht gefunden!")
             return False
         
-        # Wechsle ins installer/ Verzeichnis für NSIS
         original_cwd = os.getcwd()
         os.chdir(self.installer_dir)
         
@@ -338,14 +339,12 @@ class BACnetScannerBuilder:
             result = subprocess.run(cmd, check=True, capture_output=True, text=True)
             print("✅ Installer erfolgreich erstellt!")
             
-            # Prüfe ob Installer erstellt wurde
             installer_path = self.installer_dir / "BACnet_Scanner_v4_Installer.exe"
             if installer_path.exists():
                 size_mb = installer_path.stat().st_size / 1024 / 1024
                 print(f"📁 Installer: {installer_path}")
                 print(f"📏 Größe: {size_mb:.1f} MB")
                 
-                # Verschiebe in output/ Ordner
                 final_installer = self.output_dir / "BACnet_Scanner_v4_Installer.exe"
                 shutil.move(str(installer_path), str(final_installer))
                 print(f"📦 Finaler Installer: {final_installer}")

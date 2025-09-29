@@ -16,13 +16,10 @@
         orientation: 'vertical'
         spacing: dp(2)
         
-        # Hauptzeile mit Name und ID
         BoxLayout:
             orientation: 'horizontal'
             size_hint_y: None
             height: dp(24)
-            
-            # Name fett
             Label:
                 markup: True
                 text: '[b]'+root.name+'[/b]'
@@ -31,8 +28,6 @@
                 valign: 'middle'
                 text_size: self.size
                 size_hint_x: 0.7
-            
-            # Device-ID
             Label:
                 text: 'ID: '+str(root.device_id)
                 color: colors.get_color_with_alpha("TEXT_COLOR", 0.85)
@@ -41,20 +36,17 @@
                 text_size: self.size
                 size_hint_x: 0.3
         
-        # Zusätzliche Informationen (falls vorhanden)
         BoxLayout:
             orientation: 'horizontal'
             size_hint_y: None
             height: dp(20) if root.description or root.location or root.address else dp(0)
             opacity: 0.75
-            
             Label:
                 text: (root.description + " | " if root.description else "") + (root.location + " | " if root.location else "") + (root.address if root.address else "")
                 color: colors.get_color_with_alpha("TEXT_COLOR", 0.7)
                 halign: 'left'
                 valign: 'middle'
                 text_size: self.size
-                font_size: dp(11)
 
 <DevicesScreen>:
     canvas.before:

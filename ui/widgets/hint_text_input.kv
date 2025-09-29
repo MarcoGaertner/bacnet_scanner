@@ -1,18 +1,16 @@
 #:import dp kivy.metrics.dp
+#:import colors ui.styles.colors
 
 <HintTextInput>:
-    hint_text_color: (0.5, 0.5, 0.5, 1)
     size_hint_y: None
     height: dp(45)
     multiline: False
     write_tab: False
     padding: [dp(14), dp(14)]
     font_size: dp(14)
-    
-    # Entferne alle Standard-Hintergründe
+
     background_normal: ''
     background_active: ''
     background_disabled_normal: ''
-    
-    # Explizite Textfarbe setzen - verwende eine sichtbare Farbe
-    foreground_color: (0.2, 0.2, 0.2, 1)  # Dunkelgrau - sollte auf weißem Hintergrund sichtbar sein
+
+    hint_text_color: (colors.ThemeColors.current["TEXT_COLOR"][0]*0.5, colors.ThemeColors.current["TEXT_COLOR"][1]*0.5, colors.ThemeColors.current["TEXT_COLOR"][2]*0.5, 0.85)
