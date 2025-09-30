@@ -21,6 +21,8 @@ from ui.widgets.hint_text_input import HintTextInput
 from kivy.app import App
 from kivy.clock import Clock
 from scanner.discovery import DeviceDiscovery
+from typing import Optional, Callable
+from kivy.uix.screenmanager import ScreenManager
 
 # KV-Datei laden
 Builder.load_file('ui/screens/network_screen.kv')
@@ -42,6 +44,41 @@ class NetworkScreen(ConnectionTypeBaseScreen):
     def update_translations(self):
         """Aktualisiert die Übersetzungen"""
         self.screen_title = _("connection.network.title")
+
+    def _get_screen_manager(self) -> Optional[ScreenManager]:
+        try:
+            return App.get_running_app().root.ids.screen_manager
+        except Exception:
+            return getattr(self, "manager", None)
+
+    def _get_progress_screen(self):
+        sm = self._get_screen_manager()
+        if not sm:
+            return None
+        try:
+            return sm.get_screen('scan_progress')
+        except Exception:
+            for s in getattr(sm, "screens", []):
+                if s.__class__.__name__ == "ScanProgressScreen":
+                    return s
+        return None
+
+    def _show_progress_screen(self, initial_text: str = ""):
+        prog = self._get_progress_screen()
+        sm = self._get_screen_manager()
+        if prog and sm:
+            from kivy.clock import Clock
+            Clock.schedule_once(lambda dt: prog.set_progress(0.0, initial_text), 0)
+            sm.current = 'scan_progress'
+
+    def _update_progress(self, pct: float, msg: str = ""):
+        # ensure update on main thread
+        from kivy.clock import Clock
+        def do_update(dt):
+            prog = self._get_progress_screen()
+            if prog:
+                prog.set_progress(pct, msg)
+        Clock.schedule_once(do_update, 0)
     
     def load_network_adapters(self):
         """Lädt die Netzwerkadapter aus der JSON-Datei"""
@@ -331,59 +368,69 @@ class NetworkScreen(ConnectionTypeBaseScreen):
             self.config_manager.save_settings()
 
     def on_next_button_clicked(self, instance):
-        """Wird aufgerufen, wenn der 'Weiter'-Button geklickt wird"""
         print("DEBUG: Next Button geklickt - starte Scan")
-        
-        # Button deaktivieren während des Scans
+
         if hasattr(self, 'scan_button') and self.scan_button:
             self.scan_button.disabled = True
-        
-        # Status anzeigen
+
         if self.status_label:
-            self.status_label.text = _("connection.network.preparing_scan")  # "Preparing scan..."
-        
+            self.status_label.text = _("connection.network.preparing_scan")
+
+        # NEW: Progress-Screen öffnen
+        self._show_progress_screen(_("connection.network.preparing_scan"))
+
         try:
-            # Aktuelle IP-Adresse des ausgewählten Adapters abrufen
+            # --- config_data hier aufbauen (wie in _start_scan_async) ---
             ip_address = self.ip_label.text if hasattr(self, 'ip_label') else ""
-            
+            udp_port_str = self.udp_port_dropdown.current_value if hasattr(self, 'udp_port_dropdown') else "BAC0 (47808)"
+
+            udp_port = 47808
+            if "(" in udp_port_str and ")" in udp_port_str:
+                try:
+                    udp_port = int(udp_port_str.split("(")[1].split(")")[0])
+                except ValueError:
+                    pass
+            else:
+                try:
+                    udp_port = int(udp_port_str)
+                except ValueError:
+                    pass
+
             config_data = {
                 "adapter": self.adapter_dropdown.current_value if hasattr(self, 'adapter_dropdown') else "Ethernet",
                 "ip_address": ip_address,
                 "network_number": self.network_number_input.text if hasattr(self, 'network_number_input') else "",
-                "udp_port": self.udp_port_dropdown.current_value if hasattr(self, 'udp_port_dropdown') else "BAC0 (47808)",
+                "udp_port": str(udp_port),
                 "foreign_device": self.foreign_device_switch.active if hasattr(self, 'foreign_device_switch') else False,
                 "bbmd_ip": self.bbmd_ip_input.text if hasattr(self, 'bbmd_ip_input') and self.foreign_device_switch.active else "",
                 "bbmd_port": self.bbmd_port_dropdown.current_value if hasattr(self, 'bbmd_port_dropdown') and self.foreign_device_switch.active else "BAC0 (47808)",
                 "bbmd_network": self.bbmd_network_input.text if hasattr(self, 'bbmd_network_input') and self.foreign_device_switch.active else ""
             }
-            
-            # Konfiguration speichern falls config_manager verfügbar ist
+            # ------------------------------------------------------------
+
+            # optional: App-Config speichern (für spätere Vorbelegung)
             if hasattr(self, 'config_manager') and self.config_manager:
-                self.config_manager.save_connection_config("network", config_data)
+                self.save_connection_config("network", config_data)
                 print(f"DEBUG: Netzwerkkonfiguration gespeichert: {config_data}")
-            
+
             # Scan in separatem Thread starten
             def run_scan_in_thread():
-                # Neue Event Loop für diesen Thread erstellen
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
                 try:
-                    # Asynchronen Scan ausführen
                     loop.run_until_complete(self._start_scan_async())
                 finally:
                     loop.close()
-            
-            # Thread starten
-            scan_thread = threading.Thread(target=run_scan_in_thread, daemon=True)
-            scan_thread.start()
-            
+
+            threading.Thread(target=run_scan_in_thread, daemon=True).start()
+
         except Exception as e:
             print(f"ERROR: Fehler beim Starten des Scans: {e}")
             if self.status_label:
                 self.status_label.text = f"Fehler: {e}"
-            # Button wieder aktivieren bei Fehler
             if hasattr(self, 'scan_button') and self.scan_button:
                 self.scan_button.disabled = False
+
 
     def load_scan_results_to_devices_screen(self, scan_id):
         """Lädt die Scan-Ergebnisse in den Devices Screen"""
@@ -419,15 +466,21 @@ class NetworkScreen(ConnectionTypeBaseScreen):
         Clock.schedule_once(do_load_scan, 0)
 
     async def _start_scan_async(self):
-        """Asynchrone Methode zum Starten des Scans"""
-        def update_status(text):
+        """Asynchrone Methode zum Starten des Scans (mit Progress-Callback)"""
+        def update_status(text: str):
             # UI-Updates müssen im Hauptthread erfolgen
-            Clock.schedule_once(lambda dt: setattr(self.status_label, 'text', text) if self.status_label else None, 0)
-        
+            Clock.schedule_once(
+                lambda dt: setattr(self.status_label, 'text', text) if self.status_label else None,
+                0
+            )
+
         def enable_button():
             # Button im Hauptthread wieder aktivieren
-            Clock.schedule_once(lambda dt: setattr(self.scan_button, 'disabled', False) if hasattr(self, 'scan_button') and self.scan_button else None, 0)
-        
+            Clock.schedule_once(
+                lambda dt: setattr(self.scan_button, 'disabled', False) if hasattr(self, 'scan_button') and self.scan_button else None,
+                0
+            )
+
         def navigate_to_devices_with_results(scan_id):
             # Navigation und Laden der Ergebnisse im Hauptthread
             def do_navigate_and_load(dt):
@@ -435,22 +488,42 @@ class NetworkScreen(ConnectionTypeBaseScreen):
                     app = App.get_running_app()
                     app.root.ids.screen_manager.current = 'geräte'
                     print("DEBUG: Navigation zu 'geräte' erfolgreich")
-                    
                     # Scan-Ergebnisse laden (mit kleiner Verzögerung für Navigation)
                     Clock.schedule_once(lambda dt2: self.load_scan_results_to_devices_screen(scan_id), 0.1)
-                    
                 except Exception as e:
                     print(f"ERROR: Fehler bei Navigation und Laden: {e}")
-            
             Clock.schedule_once(do_navigate_and_load, 0)
-        
+
+        # NEW: Progress-Callback, der (falls vorhanden) den ScanProgressScreen aktualisiert
+        def progress_callback(pct: float, msg: str = ""):
+            def do_update(dt):
+                try:
+                    app = App.get_running_app()
+                    sm = app.root.ids.screen_manager if hasattr(app.root, "ids") and "screen_manager" in app.root.ids else getattr(self, "manager", None)
+                    prog = None
+                    if sm:
+                        try:
+                            prog = sm.get_screen('scan_progress')
+                        except Exception:
+                            for s in getattr(sm, "screens", []):
+                                if s.__class__.__name__ == "ScanProgressScreen":
+                                    prog = s
+                                    break
+                    if prog:
+                        # Screen-komponente updaten
+                        prog.set_progress(pct, msg or "")
+                except Exception:
+                    # still und leise scheitern – Progress ist rein kosmetisch
+                    pass
+            Clock.schedule_once(do_update, 0)
+
         update_status(_("connection.network.scanning_in_progress"))  # "Scanning in progress..."
-        
+
         try:
             # Save current config to connection_settings.json
             ip_address = self.ip_label.text if hasattr(self, 'ip_label') else ""
             udp_port_str = self.udp_port_dropdown.current_value if hasattr(self, 'udp_port_dropdown') else "BAC0 (47808)"
-            
+
             # Extract port number from string like "BAC0 (47808)"
             udp_port = 47808
             if "(" in udp_port_str and ")" in udp_port_str:
@@ -468,17 +541,17 @@ class NetworkScreen(ConnectionTypeBaseScreen):
                 "adapter": self.adapter_dropdown.current_value if hasattr(self, 'adapter_dropdown') else "Ethernet",
                 "ip_address": ip_address,
                 "network_number": self.network_number_input.text if hasattr(self, 'network_number_input') else "",
-                "udp_port": str(udp_port),  # Ensure it's stored as string or int, consistent with usage
+                "udp_port": str(udp_port),  # als String (wie zuvor genutzt)
                 "foreign_device": self.foreign_device_switch.active if hasattr(self, 'foreign_device_switch') else False,
                 "bbmd_ip": self.bbmd_ip_input.text if hasattr(self, 'bbmd_ip_input') and self.foreign_device_switch.active else "",
                 "bbmd_port": self.bbmd_port_dropdown.current_value if hasattr(self, 'bbmd_port_dropdown') and self.foreign_device_switch.active else "BAC0 (47808)",
                 "bbmd_network": self.bbmd_network_input.text if hasattr(self, 'bbmd_network_input') and self.foreign_device_switch.active else ""
             }
-            
+
             # Get the path to connection_settings.json
             base_dir = Path(os.path.dirname(os.path.abspath(__file__))).parent.parent
             config_file_path = base_dir / "config" / "connection_settings.json"
-            
+
             # Ensure config directory exists
             os.makedirs(config_file_path.parent, exist_ok=True)
 
@@ -489,23 +562,31 @@ class NetworkScreen(ConnectionTypeBaseScreen):
 
             # Initialize DeviceDiscovery with the saved config path
             discovery = DeviceDiscovery(config_path=str(config_file_path))
-            
-            # Set scan mode to 'full' for UI initiated scans
+
+            # NEW: Progress aus der Discovery in den ProgressScreen leiten
+            discovery.on_progress = progress_callback
+
+            # UI initiated ⇒ full mode
             discovery.set_scan_mode('full')
-            
-            # Perform the scan
+
+            # (Optional) initialer Fortschritt
+            progress_callback(0.03, _("connection.network.scanning_in_progress"))
+
+            # Perform the scan (liefert währenddessen laufend progress_callback-Events)
             scan_result = await discovery.discover_devices()
-            
+
             if "error" in scan_result:
                 update_status(_("connection.network.scan_error") + f": {scan_result['error']}")  # "Scan Error"
+                progress_callback(1.0, _("connection.network.scan_error"))
                 print(f"ERROR: Scan failed: {scan_result['error']}")
             else:
                 device_count = scan_result.get('device_count', 0)
                 scan_id = scan_result.get('scan_id')  # Scan-ID aus dem Ergebnis extrahieren
-                
+
                 update_status(_("connection.network.scan_complete") + f": {device_count} " + _("connection.network.devices_found"))  # "Scan Complete"
+                progress_callback(1.0, _("connection.network.scan_complete"))
                 print(f"DEBUG: Scan completed: {device_count} devices found. Scan-ID: {scan_id}")
-                
+
                 if scan_id:
                     # Navigation mit Scan-Ergebnissen
                     navigate_to_devices_with_results(scan_id)
@@ -516,19 +597,19 @@ class NetworkScreen(ConnectionTypeBaseScreen):
                         app = App.get_running_app()
                         app.root.ids.screen_manager.current = 'geräte'
                     Clock.schedule_once(do_navigate, 0)
-                
+
         except Exception as e:
             update_status(_("connection.network.scan_exception") + f": {e}")  # "Scan Exception"
+            progress_callback(1.0, _("connection.network.scan_exception"))
             print(f"ERROR: Exception during scan: {e}")
             import traceback
             traceback.print_exc()
         finally:
             # Button wieder aktivieren
             enable_button()
-            
+
             # Clear status label after a short delay if there was an error
             def clear_error_status(dt):
                 if self.status_label and (self.status_label.text.startswith(_("connection.network.scan_error")) or self.status_label.text.startswith(_("connection.network.scan_exception"))):
                     self.status_label.text = ''
-            
             Clock.schedule_once(clear_error_status, 5)  # Clear error message after 5 seconds

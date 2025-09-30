@@ -14,6 +14,7 @@ from bacpypes3.argparse import SimpleArgumentParser
 from bacpypes3.app import Application
 from bacpypes3.apdu import ErrorRejectAbortNack
 from bacpypes3.constructeddata import AnyAtomic
+from typing import Callable, Optional
 
 # Debugging konfigurieren
 _debug = 0
@@ -33,6 +34,7 @@ class BACnetClient:
             "devices": []
         }
         self.scan_mode = scan_mode  # 'standard', 'extended', 'full'
+        self.on_progress: Optional[Callable[[float, str], None]] = None
         
         # Grundlegende Eigenschaften, die immer abgefragt werden
         self.basic_properties = [
@@ -78,6 +80,19 @@ class BACnetClient:
         
         # Eigenschaften, die tatsächlich abgefragt werden sollen, basierend auf scan_mode
         self.properties_to_query = self.get_properties_for_mode(scan_mode)
+
+
+
+
+    def _progress(self, pct: float, msg: str):
+        try:
+            if self.on_progress:
+                self.on_progress(float(pct), str(msg))
+        except Exception:
+            pass
+
+
+
     
     def get_properties_for_mode(self, mode):
         """
@@ -118,54 +133,56 @@ class BACnetClient:
             return False
     
     async def scan_network(self) -> Dict[str, Any]:
-        """
-        Führt einen Netzwerk-Scan durch und gibt die gefundenen Geräte zurück
-        """
         if not self.app:
             raise RuntimeError("BACnet-Client wurde nicht initialisiert")
-        
-        # Zeitstempel setzen
+
         self.scan_result["timestamp"] = datetime.datetime.now().isoformat()
         self.scan_result["scan_mode"] = self.scan_mode
-        
+
         try:
-            print("Sende WhoIs-Anfrage...")
-            
-            # WhoIs-Anfrage senden und Antworten sammeln
+            self._progress(0.10, "Sende WhoIs …")
             i_am_devices = await self.app.who_is()
-            
-            # Überprüfen, ob Geräte gefunden wurden
+
             if not i_am_devices:
-                print("\nKeine BACnet-Geräte gefunden.")
                 self.scan_result["device_count"] = 0
                 self.scan_result["devices"] = []
+                self._progress(1.0, "Keine BACnet-Geräte gefunden")
                 return self.scan_result
-            
-            print(f"\nGefundene Geräte: {len(i_am_devices)}")
-            print("-" * 60)
-            
-            # Geräteliste zurücksetzen
+
+            total = len(i_am_devices)
             self.scan_result["devices"] = []
-            self.scan_result["device_count"] = len(i_am_devices)
-            
-            # Für jedes Gerät Eigenschaften abfragen
-            for device in i_am_devices:
+            self.scan_result["device_count"] = total
+            self._progress(0.20, f"{total} Gerät(e) gefunden – lese Eigenschaften …")
+
+            # map progress from 0.20 .. 0.95 across devices
+            start_p, end_p = 0.20, 0.95
+
+            for idx, device in enumerate(i_am_devices, start=1):
                 device_id = device.iAmDeviceIdentifier[1]
                 device_address = str(device.pduSource)
-                
-                # Gerät scannen
+
+                self._progress(
+                    start_p + (end_p - start_p) * (idx - 1) / max(1, total),
+                    f"Gerät {idx}/{total} ({device_id}) …"
+                )
+
                 device_info = await self.scan_device(device_address, device_id)
-                
-                # Gerät zur Ergebnisliste hinzufügen
+
                 self.scan_result["devices"].append({
                     "device_id": device_id,
                     "address": device_address,
                     "properties": device_info
                 })
-            
+
+                self._progress(
+                    start_p + (end_p - start_p) * (idx) / max(1, total),
+                    f"Gerät {idx}/{total} abgeschlossen"
+                )
+
+            self._progress(0.96, "Scan abgeschlossen – aufräumen …")
             return self.scan_result
-        
         except Exception as e:
+            self._progress(1.0, f"Fehler: {e}")
             print(f"Fehler beim Scannen des Netzwerks: {e}")
             import traceback
             traceback.print_exc()

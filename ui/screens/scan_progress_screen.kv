@@ -1,0 +1,57 @@
+#:import ThemeColors ui.styles.colors.ThemeColors
+#:import dp kivy.metrics.dp
+
+<ScanProgressScreen>:
+    canvas.before:
+        Color:
+            rgba: ThemeColors.current["BACKGROUND"]
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(20)
+        spacing: dp(12)
+
+        # Title
+        Label:
+            text: "Netzwerkscan läuft …"
+            font_size: dp(24)
+            color: ThemeColors.current["TEXT_COLOR"]
+            size_hint_y: None
+            height: dp(40)
+            halign: 'left'
+            valign: 'middle'
+            text_size: self.size
+
+        # Message / details
+        Label:
+            id: msg
+            text: root.message or ""
+            color: ThemeColors.current["TEXT_COLOR"]
+            size_hint_y: 1
+            halign: 'left'
+            valign: 'top'
+            text_size: self.size
+
+        # Bottom progress bar row
+        BoxLayout:
+            size_hint_y: None
+            height: dp(28)
+            spacing: dp(8)
+            padding: [0, dp(2), 0, 0]
+
+            Label:
+                text: f"{int(root.progress*100)} %"
+                size_hint_x: None
+                width: dp(60)
+                color: ThemeColors.current["TEXT_COLOR"]
+                halign: 'right'
+                valign: 'middle'
+                text_size: self.size
+
+            ProgressBar:
+                id: pbar
+                max: 1.0
+                value: root.progress

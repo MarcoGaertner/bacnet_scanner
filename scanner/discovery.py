@@ -9,6 +9,7 @@ import sys
 import asyncio
 from typing import Dict, List, Any, Optional
 from pathlib import Path
+from typing import Callable, Optional
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -28,6 +29,7 @@ class DeviceDiscovery:
         
         # Client-Instanzen für verschiedene Verbindungstypen
         self.bacnet_client = BACnetClient()
+        self.on_progress: Optional[Callable[[float, str], None]] = None
         
         # Speicher für Scan-Ergebnisse initialisieren
         self.storage = DatabaseStorage()
@@ -41,6 +43,14 @@ class DeviceDiscovery:
         except Exception as e:
             print(f"Fehler beim Laden der Konfiguration: {e}")
             return {}
+        
+
+    def _progress(self, pct: float, msg: str):
+        try:
+            if self.on_progress:
+                self.on_progress(float(pct), str(msg))
+        except Exception:
+            pass
     
     async def discover_devices(self) -> Dict[str, Any]:
         """
@@ -96,6 +106,7 @@ class DeviceDiscovery:
         """
         Entdeckt BACnet/IP-Geräte im Netzwerk
         """
+        self._progress(0.02, "Lade Konfiguration …")
         network_config = self.config.get("connection", {}).get("network", {})
         
         # Adapter-Name aus Konfiguration holen
@@ -124,16 +135,23 @@ class DeviceDiscovery:
             except ValueError:
                 udp_port = 47808  # Standard BACnet-Port
         
+
+
+        self._progress(0.05, "Initialisiere BACnet Client …")
         # BACnet-Client initialisieren
         init_success = await self.bacnet_client.initialize(ip_address, udp_port)
         
         if not init_success:
             return {"error": "BACnet-Client konnte nicht initialisiert werden"}
         
+        self.bacnet_client.on_progress = self.on_progress
+
         try:
             # Scan durchführen
             scan_result = await self.bacnet_client.scan_network()
             
+            self._progress(0.97, "Speichere Scan-Ergebnis …")
+
             # Verbindungsinfo für die Datenbank vorbereiten
             connection_info = {
                 "type": "network",
@@ -167,6 +185,8 @@ class DeviceDiscovery:
             scan_result["scan_id"] = scan_id
             
             print(f"SUCCESS: Scan erfolgreich gespeichert mit ID: {scan_id}")
+
+            self._progress(1.0, "Scan abgeschlossen")
             return scan_result
         
         except Exception as e:

@@ -17,6 +17,7 @@ from ui.screens.device_details_screen import DeviceDetailsScreen
 from ui.screens.network_screen import NetworkScreen
 from ui.screens.export_screen import ExportScreen
 from ui.screens.export_settings_screen import ExportSettingsScreen
+from ui.screens.scan_progress_screen import ScanProgressScreen
 
 Builder.load_file('ui/widgets/screen_manager.kv')
 
@@ -52,6 +53,7 @@ class AppScreenManager(ScreenManager):
         self.add_widget(NetworkScreen(name='network'))  
         self.add_widget(ExportScreen(name='export'))
         self.add_widget(ExportSettingsScreen(name='export_settings'))
+        self.add_widget(ScanProgressScreen(name='scan_progress'))
         
         # Reagiere auf Sprachänderungen
         event_bus.bind(on_language_changed=self.on_language_changed)
