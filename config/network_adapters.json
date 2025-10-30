@@ -1,12 +1,12 @@
 [
   {
-    "name": "Ethernet 4",
+    "name": "Ethernet 7",
     "status": "Verbunden",
     "type": "Ethernet",
     "mac_address": "A8-B1-3B-AC-25-EE",
-    "ip_address": "172.16.13.120",
+    "ip_address": "172.16.0.66",
     "subnet_mask": "255.255.255.0",
-    "default_gateway": "172.16.13.254",
+    "default_gateway": "",
     "preferred_dns": "",
     "alternate_dns": ""
   },

@@ -20,9 +20,15 @@
                 "order": 30
             },
             {
+                "key": "vendor-name",
+                "label": "Hersteller",
+                "enabled": 1,
+                "order": 35
+            },
+            {
                 "key": "firmware-revision",
                 "label": "Firmwareversion",
-                "enabled": 0,
+                "enabled": 1,
                 "order": 40
             },
             {
@@ -40,7 +46,7 @@
             {
                 "key": "application-software-version",
                 "label": "SW Version Applikation",
-                "enabled": 0,
+                "enabled": 1,
                 "order": 70
             },
             {

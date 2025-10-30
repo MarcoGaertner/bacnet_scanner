@@ -2,8 +2,8 @@
   "connection": {
     "type": "network",
     "network": {
-      "adapter": "Ethernet 4",
-      "ip_address": "172.16.13.120",
+      "adapter": "Ethernet 7",
+      "ip_address": "172.16.0.66",
       "network_number": "",
       "udp_port": "47808",
       "foreign_device": false,
