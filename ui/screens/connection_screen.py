@@ -5,6 +5,7 @@ from kivy.uix.image import Image
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.lang import Builder
+from ui.utils import get_resource_path
 from kivy.properties import StringProperty, ObjectProperty, ListProperty, BooleanProperty
 from kivy.metrics import dp
 from kivy.clock import Clock

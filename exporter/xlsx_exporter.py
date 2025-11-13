@@ -1,6 +1,6 @@
 # exporter/xlsx_exporter.py
 from typing import List, Dict, Any
-from .common import ensure_dir_for
+from exporter.common import ensure_dir_for
 
 def export_xlsx(path: str, rows: List[Dict[str, Any]], headers: List[str], header_labels: Dict[str, str]):
     ensure_dir_for(path)

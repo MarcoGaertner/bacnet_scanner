@@ -1,6 +1,7 @@
 from kivy.uix.boxlayout import BoxLayout
 from kivy.properties import StringProperty, BooleanProperty, ListProperty, NumericProperty
 from kivy.lang import Builder
+from ui.utils import get_resource_path
 from core.events import event_bus
 from ui.styles.colors import ThemeColors
 from kivy.clock import Clock

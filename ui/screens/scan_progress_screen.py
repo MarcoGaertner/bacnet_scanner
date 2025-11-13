@@ -1,4 +1,5 @@
 from kivy.lang import Builder
+from ui.utils import get_resource_path
 from kivy.properties import NumericProperty, StringProperty
 from ui.screens.base_screen import BaseScreen
 from ui.styles.colors import ThemeColors

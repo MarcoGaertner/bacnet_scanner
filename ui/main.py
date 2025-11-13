@@ -1,6 +1,7 @@
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.lang import Builder
+from ui.utils import get_resource_path
 from core.config import ConfigManager
 from core.events import event_bus
 from ui.styles.colors import ThemeManager

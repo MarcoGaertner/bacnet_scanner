@@ -3,6 +3,7 @@ from kivy.uix.button import Button
 from kivy.uix.boxlayout import BoxLayout
 from kivy.properties import StringProperty, ListProperty, ObjectProperty, BooleanProperty
 from kivy.lang import Builder
+from ui.utils import get_resource_path
 from core.events import event_bus
 from kivy.graphics import Color, Rectangle
 from ui.styles.colors import ThemeColors

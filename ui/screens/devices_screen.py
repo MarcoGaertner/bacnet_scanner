@@ -6,6 +6,7 @@ from kivy.uix.label import Label
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
 from kivy.lang import Builder
+from ui.utils import get_resource_path
 from kivy.properties import StringProperty, ObjectProperty, ListProperty, NumericProperty
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.metrics import dp

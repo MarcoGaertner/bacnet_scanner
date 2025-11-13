@@ -1,5 +1,6 @@
 # ui/screens/device_details_screen.py
 from kivy.lang import Builder
+from ui.utils import get_resource_path
 from kivy.properties import DictProperty, NumericProperty, StringProperty
 from kivy.uix.boxlayout import BoxLayout
 

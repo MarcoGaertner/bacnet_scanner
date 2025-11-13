@@ -13,9 +13,9 @@ from typing import Callable, Optional
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from .bacnet_client import BACnetClient
+from scanner.bacnet_client import BACnetClient
 from scanner.network_utils import get_adapter_by_name  # Verwenden der vorhandenen Funktion
-from .storage import DatabaseStorage
+from scanner.storage import DatabaseStorage
 
 class DeviceDiscovery:
     """

@@ -2,6 +2,7 @@ from ui.screens.base_screen import BaseScreen
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.textinput import TextInput
 from kivy.lang import Builder
+from ui.utils import get_resource_path
 from kivy.properties import StringProperty, BooleanProperty, ObjectProperty
 from core.config import ConfigManager
 from core.i18n.translator import _

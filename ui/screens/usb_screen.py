@@ -4,6 +4,7 @@ from kivy.uix.label import Label
 from kivy.properties import StringProperty
 from kivy.metrics import dp
 from kivy.lang import Builder
+from ui.utils import get_resource_path
 from core.i18n.translator import _
 from ui.styles.colors import ThemeColors
 from ui.widgets.expandable_panel import ExpandablePanel

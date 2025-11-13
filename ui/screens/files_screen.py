@@ -1,6 +1,7 @@
 # ui/screens/files_screen.py
 from functools import partial
 from kivy.lang import Builder
+from ui.utils import get_resource_path
 from kivy.properties import ListProperty, StringProperty, NumericProperty
 from kivy.clock import Clock
 from kivy.uix.boxlayout import BoxLayout

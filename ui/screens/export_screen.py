@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 
 from kivy.lang import Builder
+from ui.utils import get_resource_path
 from kivy.properties import NumericProperty, ListProperty, StringProperty, DictProperty, ObjectProperty
 from kivy.app import App
 from kivy.clock import Clock

@@ -8,8 +8,8 @@ import json
 import asyncio
 from typing import Dict, Any, Optional
 
-from .discovery import DeviceDiscovery
-from .storage import DatabaseStorage
+from scanner.discovery import DeviceDiscovery
+from scanner.storage import DatabaseStorage
 
 async def run_scan(config_path: str = "config/connection_settings.json", scan_mode: str = 'standard') -> Dict[str, Any]:
     """

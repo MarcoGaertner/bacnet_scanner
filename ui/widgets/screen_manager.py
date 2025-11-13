@@ -1,5 +1,6 @@
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.lang import Builder
+from ui.utils import get_resource_path
 from core.events import event_bus  # Wichtig: EventBus importieren
 from kivy.core.window import Window
 from kivy.app import App

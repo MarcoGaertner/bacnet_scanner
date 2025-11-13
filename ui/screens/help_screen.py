@@ -1,4 +1,5 @@
 from kivy.lang import Builder
+from ui.utils import get_resource_path
 from ui.screens.base_screen import BaseScreen 
 
 Builder.load_file('ui/screens/help_screen.kv')

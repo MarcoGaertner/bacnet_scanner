@@ -1,6 +1,7 @@
 from ui.screens.base_screen import BaseScreen
 from kivy.uix.boxlayout import BoxLayout
 from kivy.lang import Builder
+from ui.utils import get_resource_path
 from kivy.properties import StringProperty, ObjectProperty
 from ui.widgets.dropdown import NestedDropdown
 from ui.widgets.expandable_panel import ExpandablePanel

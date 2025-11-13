@@ -2,6 +2,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.properties import ObjectProperty, BooleanProperty, StringProperty, ListProperty
 from kivy.lang import Builder
+from ui.utils import get_resource_path
 from core.events import event_bus
 from ui.styles.colors import ThemeColors
 from os.path import join, dirname, abspath

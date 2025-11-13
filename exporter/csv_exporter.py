@@ -1,7 +1,7 @@
 # exporter/csv_exporter.py
 import csv
 from typing import List, Dict, Any
-from .common import ensure_dir_for
+from exporter.common import ensure_dir_for
 
 def export_csv(path: str, rows: List[Dict[str, Any]], headers: List[str], header_labels: Dict[str, str], delimiter: str = ";"):
     ensure_dir_for(path)

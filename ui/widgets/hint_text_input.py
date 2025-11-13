@@ -3,6 +3,7 @@ from kivy.properties import (
     StringProperty, ListProperty, BooleanProperty, NumericProperty
 )
 from kivy.lang import Builder
+from ui.utils import get_resource_path
 from kivy.graphics import Color, RoundedRectangle, Line
 from kivy.metrics import dp
 from kivy.clock import Clock

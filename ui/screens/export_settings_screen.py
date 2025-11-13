@@ -1,6 +1,7 @@
 # ui/screens/export_settings_screen.py
 from typing import List, Dict, Any, Optional
 from kivy.lang import Builder
+from ui.utils import get_resource_path
 from kivy.properties import ListProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.behaviors import ButtonBehavior
